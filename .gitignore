@@ -1,0 +1,31 @@
+# ── Node.js ──────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log
+.pnp.*
+*.tsbuildinfo
+
+# Variables de entorno (nunca subir credenciales)
+.env
+.env.local
+.env.*.local
+
+# ── Arduino / ESP32 ───────────────────────────────────────────────────
+# Archivo de secretos generado a partir de secrets_example.h
+ESP32/secrets.h
+# Carpeta de compilación del IDE
+build/
+*.elf
+*.bin
+*.hex
+
+# ── IDEs ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ── Sistema operativo ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
