@@ -1,0 +1,30 @@
+PIN OUT del proyecto
+
+Conservar del proyecto anterior:
+
+GPIO 0 = DIVISOR DE TENSION
+// Power control
+#define POWER_PIN 2
+#define POWER_PIN2 4
+Sonda multiparametrica:
+#define RXD2 16
+#define TXD2 17 
+const int analogInPin = A6;  // Analog input pin that the potentiometer is attached to
+float sensorValue = 0;  // value read from the pot
+
+Añadir nuevos sensores:
+
+GPS:
+
+GPIO 12 = tx_gps
+GPIO 13 = rx_gps
+
+Tarjeta SD:
+
+cs = GPIO 5
+sck = GPIO 13
+mosi = GPIO 18
+miso = GPIO 19
+
+
+
