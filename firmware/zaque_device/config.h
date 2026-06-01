@@ -62,18 +62,15 @@
 // PINES - GPS
 // ============================================================================
 #define GPIO_TX_GPS 12              // TX del GPS
-#define GPIO_RX_GPS 13              // RX del GPS (CONFLICTO: mismo que SKC de SD)
+#define GPIO_RX_GPS 13              // RX del GPS
 
 // ============================================================================
 // PINES - TARJETA microSD (SPI)
 // ============================================================================
 #define GPIO_SD_CS 5                // Chip Select
-#define GPIO_SD_SCK 13              // CONFLICTO: mismo que RX_GPS
+#define GPIO_SD_SCK 23              // Clock (SPI)
 #define GPIO_SD_MOSI 18             // MOSI
 #define GPIO_SD_MISO 19             // MISO
-
-// NOTA: El pin 13 (GPIO_RX_GPS y GPIO_SD_SCK) genera conflicto.
-// Ver documentación hardware.md para solución (usar UART1 o ajustar pines).
 
 // ============================================================================
 // CONFIGURACIÓN DE MEDICIÓN

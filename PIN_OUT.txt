@@ -22,7 +22,7 @@ GPIO 13 = rx_gps
 Tarjeta SD:
 
 cs = GPIO 5
-sck = GPIO 13
+sck = GPIO 23
 mosi = GPIO 18
 miso = GPIO 19
 
