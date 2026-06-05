@@ -171,9 +171,36 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
             color: #333;
         }
         
+        .metric-value.error {
+            color: #f44336;
+            font-size: 14px;
+        }
+        
         .metric-unit {
             font-size: 12px;
             color: #999;
+        }
+        
+        .error-badge {
+            display: inline-block;
+            background: #f44336;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .warning-badge {
+            display: inline-block;
+            background: #ff9800;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 5px;
         }
         
         .gps-info {
@@ -344,10 +371,12 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
         // Configuración
         const API_BASE = window.location.origin;
         const REFRESH_INTERVAL = 60000; // 1 minuto
+        const FETCH_TIMEOUT = 5000; // 5 segundos timeout
         
         // Estado
         let latestData = null;
         let autoRefreshInterval = null;
+        let dataError = null;
         
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
@@ -356,15 +385,31 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
             autoRefreshInterval = setInterval(refreshData, REFRESH_INTERVAL);
         });
         
-        // Obtener datos del API
+        // Obtener datos del API con timeout
         async function refreshData() {
             try {
-                const response = await fetch(API_BASE + '/api/measurements/latest');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
+                
+                const response = await fetch(API_BASE + '/api/dashboard', {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error('HTTP Error: ' + response.status);
+                }
+                
                 latestData = await response.json();
+                dataError = null;
                 render();
             } catch (error) {
                 console.error('Error fetching data:', error);
-                document.getElementById('loading').innerHTML = '<p style="color: white;">Error cargando datos. Reintentando...</p>';
+                dataError = error.name === 'AbortError' ? 
+                    'Timeout (5s) - No hay conexión o el servidor no responde' : 
+                    'Error: ' + error.message;
+                renderError();
             }
         }
         
@@ -391,31 +436,62 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
             document.getElementById('status-time').textContent = 'Actualizado: ' + now;
         }
         
+        function renderError() {
+            document.getElementById('loading').innerHTML = `
+                <div style="color: #ff9800; padding: 20px; background: rgba(255,152,0,0.1); border-radius: 8px; text-align: center;">
+                    <p style="font-size: 16px; margin-bottom: 10px;">⚠️ No se puede cargar el dashboard</p>
+                    <p style="font-size: 14px;">${dataError}</p>
+                    <p style="font-size: 12px; margin-top: 10px;">Reintentando en ${REFRESH_INTERVAL/1000}s...</p>
+                </div>
+            `;
+            document.getElementById('content').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+        }
+        
         function renderSummary() {
-            const nodes = latestData.nodes;
-            const activeNodes = nodes.filter(n => isNodeActive(n)).length;
+            const nodes = latestData.nodes || [];
+            const activeNodes = nodes.filter(n => n.is_active).length;
+            const totalNodes = Math.max(1, nodes.length); // Mínimo 1 (el MAIN)
             
             const summary = document.getElementById('summary');
             summary.innerHTML = `
                 <div class="summary-card">
-                    <div class="label">Nodos Totales</div>
-                    <div class="value">${nodes.length}</div>
+                    <div class="label">🌐 Nodos Conectados</div>
+                    <div class="value">${activeNodes}/${totalNodes}</div>
                 </div>
                 <div class="summary-card">
-                    <div class="label">Nodos Activos</div>
-                    <div class="value">${activeNodes}</div>
+                    <div class="label">📡 WiFi</div>
+                    <div class="value">${latestData.wifi_rssi || '--'}<span class="metric-unit">dBm</span></div>
                 </div>
                 <div class="summary-card">
-                    <div class="label">Última Medición</div>
-                    <div class="value">${new Date(latestData.updated_at).toLocaleTimeString('es-CO')}</div>
+                    <div class="label">💾 SD</div>
+                    <div class="value">${latestData.sd_available ? '✓' : '✗'}</div>
                 </div>
             `;
         }
         
         function renderNodes() {
-            const nodes = latestData.nodes;
+            const nodes = latestData.nodes || [];
             const grid = document.getElementById('nodes-grid');
             grid.innerHTML = '';
+            
+            if (nodes.length === 0) {
+                grid.innerHTML = `
+                    <div class="node-card" style="grid-column: 1/-1;">
+                        <div class="node-header">
+                            <div>
+                                <div class="node-title">${NODE_NAME || 'Nodo Principal'}</div>
+                                <div class="node-role">PRINCIPAL</div>
+                            </div>
+                            <div class="node-status"></div>
+                        </div>
+                        <div class="node-content">
+                            <p style="color: #999;">Esperando primera medición...</p>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
             
             nodes.forEach(node => {
                 grid.appendChild(createNodeCard(node));
@@ -426,63 +502,99 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
             const card = document.createElement('div');
             card.className = 'node-card';
             
-            const isActive = isNodeActive(node);
-            const roleLabel = node.role === 'main' ? 'PRINCIPAL' : 'SENSOR';
+            const isActive = node.is_active !== false;
+            const roleLabel = node.role === 'main' ? '🏠 PRINCIPAL' : '📊 SENSOR';
+            
+            // Función para formatear valores
+            const formatValue = (value, unit = '') => {
+                if (value === null || value === undefined || value === '') {
+                    return `<span class="error-badge">ERROR</span>`;
+                }
+                if (typeof value === 'number' && value !== parseInt(value)) {
+                    return value.toFixed(2) + (unit ? ' ' + unit : '');
+                }
+                return value + (unit ? ' ' + unit : '');
+            };
+            
+            // Construir grid de métricas
+            let metricsHtml = `
+                <div class="measurement">
+                    <div class="metric">
+                        <span class="metric-label">Temperatura</span>
+                        <span class="metric-value">${formatValue(node.soil_temperature, '°C')}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Humedad</span>
+                        <span class="metric-value">${formatValue(node.soil_humidity, '%')}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">pH</span>
+                        <span class="metric-value">${formatValue(node.ph)}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">CE</span>
+                        <span class="metric-value">${formatValue(node.electrical_conductivity, 'µS/cm')}</span>
+                    </div>
+                </div>
+                
+                <div class="measurement">
+                    <div class="metric">
+                        <span class="metric-label">Nitrógeno</span>
+                        <span class="metric-value">${formatValue(node.nitrogen, 'mg/kg')}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Fósforo</span>
+                        <span class="metric-value">${formatValue(node.phosphorus, 'mg/kg')}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Potasio</span>
+                        <span class="metric-value">${formatValue(node.potassium, 'mg/kg')}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Batería</span>
+                        <span class="metric-value">${node.battery_percent || 100}%</span>
+                        <div class="battery-bar">
+                            <div class="battery-fill ${getBatteryClass(node.battery_percent || 100)}" 
+                                 style="width: ${node.battery_percent || 100}%"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // GPS
+            if (node.gps_valid && node.latitude && node.longitude) {
+                metricsHtml += `
+                    <div class="gps-info">
+                        📍 ${node.latitude.toFixed(4)}, ${node.longitude.toFixed(4)}
+                    </div>
+                `;
+            } else if (node.role === 'main') {
+                metricsHtml += `
+                    <div class="gps-info" style="color: #f44336;">
+                        📍 GPS Error - <span class="error-badge">NO VÁLIDO</span>
+                    </div>
+                `;
+            }
+            
+            // Recomendación
+            if (node.recommendation) {
+                metricsHtml += `
+                    <div class="recommendation ${getRecommendationClass(node.recommendation)}">
+                        💡 ${node.recommendation}
+                    </div>
+                `;
+            }
             
             card.innerHTML = `
                 <div class="node-header">
                     <div>
-                        <div class="node-title">${node.node_name}</div>
+                        <div class="node-title">${node.node_name || node.node_id}</div>
                         <div class="node-role">${roleLabel}</div>
                     </div>
                     <div class="node-status ${!isActive ? 'offline' : ''}"></div>
                 </div>
                 <div class="node-content">
-                    <div class="measurement">
-                        <div class="metric">
-                            <span class="metric-label">Humedad</span>
-                            <span class="metric-value">${node.soil_humidity || '--'}<span class="metric-unit">%</span></span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">pH</span>
-                            <span class="metric-value">${node.ph || '--'}</span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Nitrógeno</span>
-                            <span class="metric-value">${node.nitrogen || '--'}<span class="metric-unit">mg/kg</span></span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Fósforo</span>
-                            <span class="metric-value">${node.phosphorus || '--'}<span class="metric-unit">mg/kg</span></span>
-                        </div>
-                    </div>
-                    
-                    <div class="measurement">
-                        <div class="metric">
-                            <span class="metric-label">Potasio</span>
-                            <span class="metric-value">${node.potassium || '--'}<span class="metric-unit">mg/kg</span></span>
-                        </div>
-                        <div class="metric">
-                            <span class="metric-label">Batería</span>
-                            <span class="metric-value">${node.battery_percent || '--'}%</span>
-                            <div class="battery-bar">
-                                <div class="battery-fill ${getBatteryClass(node.battery_percent)}" 
-                                     style="width: ${node.battery_percent || 0}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${node.lat && node.lon ? `
-                        <div class="gps-info">
-                            📍 ${node.lat.toFixed(4)}, ${node.lon.toFixed(4)}
-                        </div>
-                    ` : ''}
-                    
-                    ${node.recommendation ? `
-                        <div class="recommendation ${getRecommendationClass(node.recommendation)}">
-                            💡 ${node.recommendation}
-                        </div>
-                    ` : ''}
+                    ${metricsHtml}
                 </div>
             `;
             
@@ -490,11 +602,11 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
         }
         
         function isNodeActive(node) {
-            if (!node.last_seen) return false;
+            if (!node.last_seen) return node.is_active !== false;
             const lastSeen = new Date(node.last_seen).getTime();
             const now = Date.now();
             const diffMinutes = (now - lastSeen) / 60000;
-            return diffMinutes < 10; // Activo si se vio en los últimos 10 minutos
+            return diffMinutes < 10;
         }
         
         function getBatteryClass(battery) {

@@ -25,6 +25,7 @@ public:
   void handleHistoryAPI();
   void handleMeasurementsAPI();
   void handleDownloadCSV();
+  void handleDashboardAPI();
 };
 
 // Función helper

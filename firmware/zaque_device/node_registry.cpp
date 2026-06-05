@@ -63,6 +63,14 @@ bool NodeRegistry::getNodeByID(const char* node_id, Measurement& m) const {
   return false;
 }
 
+bool NodeRegistry::getNodeByIndex(int index, Measurement& m) const {
+  if (index >= 0 && index < node_count) {
+    m = nodes[index];
+    return true;
+  }
+  return false;
+}
+
 // Variable global para acceso desde web_server
 static NodeRegistry* g_registry = nullptr;
 

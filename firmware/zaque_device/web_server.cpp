@@ -20,6 +20,7 @@ void ESP32WebServer::init(int port) {
   server.on("/dashboard", HTTP_GET, [this]() { handleRoot(); });
   server.on("/api/status", HTTP_GET, [this]() { handleStatusAPI(); });
   server.on("/api/nodes", HTTP_GET, [this]() { handleNodesAPI(); });
+  server.on("/api/dashboard", HTTP_GET, [this]() { handleDashboardAPI(); });
   server.on("/api/measurements/latest", HTTP_GET, [this]() { handleLatestAPI(); });
   server.on("/api/history", HTTP_GET, [this]() { handleHistoryAPI(); });
   server.on("/api/measurements", HTTP_POST, [this]() { handleMeasurementsAPI(); });
@@ -188,6 +189,69 @@ void ESP32WebServer::handleDownloadCSV() {
   }
 
   file.close();
+}
+
+void ESP32WebServer::handleDashboardAPI() {
+  DynamicJsonDocument doc(4096);
+  
+  // Metadatos generales
+  doc["timestamp"] = millis();
+  doc["status"] = "ok";
+  
+  NodeRegistry* registry = getGlobalNodeRegistry();
+  int nodeCount = registry->getNodeCount();
+  
+  // Información de resumen
+  doc["total_nodes"] = nodeCount;
+  doc["wifi_rssi"] = WiFi.RSSI();
+  doc["sd_available"] = SD.exists(SD_MEASUREMENTS_FILE);
+  
+  // Array de nodos
+  JsonArray nodes_array = doc.createNestedArray("nodes");
+  
+  // Agregar todos los nodos registrados
+  if (nodeCount > 0) {
+    for (int i = 0; i < nodeCount; i++) {
+      Measurement m;
+      if (registry->getNodeByIndex(i, m)) {
+        JsonObject node = nodes_array.createNestedObject();
+        node["node_id"] = m.node_id;
+        node["node_name"] = m.node_name;
+        node["role"] = m.role;
+        node["soil_temperature"] = m.soil_temperature;
+        node["soil_humidity"] = m.soil_humidity;
+        node["electrical_conductivity"] = m.electrical_conductivity;
+        node["ph"] = m.ph;
+        node["nitrogen"] = m.nitrogen;
+        node["phosphorus"] = m.phosphorus;
+        node["potassium"] = m.potassium;
+        node["battery_percent"] = m.battery_percent;
+        node["is_active"] = true;
+        node["gps_valid"] = m.gps_valid;
+        if (m.gps_valid) {
+          node["latitude"] = m.latitude;
+          node["longitude"] = m.longitude;
+        }
+        if (strlen(m.recommendation) > 0) {
+          node["recommendation"] = m.recommendation;
+        }
+        node["last_update"] = m.timestamp_ms;
+      }
+    }
+  } else {
+    // Si no hay nodos, al menos mostrar que el MAIN está disponible
+    JsonObject main_node = nodes_array.createNestedObject();
+    main_node["node_id"] = NODE_ID;
+    main_node["node_name"] = NODE_NAME;
+    main_node["role"] = "main";
+    main_node["is_active"] = true;
+    main_node["battery_percent"] = 100;
+    main_node["status"] = "waiting_first_measurement";
+  }
+  
+  String response;
+  serializeJson(doc, response);
+  server.send(200, "application/json", response);
 }
 
 // Factory function

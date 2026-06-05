@@ -24,6 +24,7 @@ public:
   
   int getNodeCount() const override;
   bool getNodeByID(const char* node_id, Measurement& m) const override;
+  bool getNodeByIndex(int index, Measurement& m) const;
 
 private:
   Measurement nodes[MAX_NODES];
