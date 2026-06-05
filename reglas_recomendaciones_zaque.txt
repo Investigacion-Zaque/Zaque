@@ -1,0 +1,833 @@
+REGLAS DE RECOMENDACIONES ZAQUE
+Sistema offline multinodo para monitoreo agrícola
+
+OBJETIVO
+Este archivo reúne reglas para que el sistema Zaque genere indicaciones útiles para campesinos colombianos usando la medición actual y el histórico de cada nodo de la finca.
+
+IMPORTANTE
+Las recomendaciones son orientativas. No reemplazan un análisis de suelo de laboratorio ni la asesoría de un agrónomo. El sistema debe evitar recomendar aplicaciones específicas de productos cuando la medición sea inválida, incompleta o contradictoria.
+
+============================================================
+1. VALIDACIÓN GENERAL DE MEDICIONES
+============================================================
+
+REGLA 1.1 - Medición inválida general
+SI temperatura, humedad, pH, CE, nitrógeno, fósforo y potasio están en ERROR
+ENTONCES mostrar:
+"No se puede generar una recomendación agrícola confiable porque la medición actual no es válida. Revise la conexión del sensor de suelo, la alimentación, el módulo RS485/Modbus y el firmware antes de tomar decisiones de riego o fertilización."
+
+REGLA 1.2 - Batería alta y sensores en error
+SI batería >= 70% Y varios sensores están en ERROR
+ENTONCES mostrar:
+"La batería está en buen estado, pero los sensores no entregan datos. El problema probablemente está en cableado, comunicación RS485/Modbus, dirección del sensor, alimentación del sensor o configuración del firmware."
+
+REGLA 1.3 - Batería baja
+SI batería < 20%
+ENTONCES mostrar:
+"La batería del nodo está baja. Recargue o reemplace la fuente de energía para evitar pérdida de mediciones."
+
+REGLA 1.4 - Batería crítica
+SI batería < 10%
+ENTONCES mostrar:
+"La batería está en nivel crítico. El nodo puede apagarse pronto y dejar de registrar datos. Priorice mantenimiento del equipo."
+
+REGLA 1.5 - GPS no válido
+SI gps_valid == false
+ENTONCES mostrar:
+"La ubicación GPS no es válida. La medición puede guardarse, pero no se podrá asociar con una zona exacta de la finca. Ubique el equipo a cielo abierto y espere a que el GPS obtenga señal."
+
+REGLA 1.6 - SD con error
+SI sd_status == error
+ENTONCES mostrar:
+"No se pudo guardar en la tarjeta SD. Revise que esté insertada correctamente, que tenga formato compatible y espacio disponible."
+
+REGLA 1.7 - Nodo sin datos recientes
+SI última_medición > intervalo_esperado * 2
+ENTONCES mostrar:
+"Este nodo no ha enviado datos recientemente. Revise si está encendido, si tiene batería, si está dentro del alcance de la red WiFi y si la tarjeta SD funciona."
+
+REGLA 1.8 - No recomendar acciones agrícolas con datos inválidos
+SI cualquier variable crítica está en ERROR
+ENTONCES no recomendar riego, fertilización, encalado ni corrección química como acción definitiva. Mostrar primero recomendación técnica de revisión.
+
+============================================================
+2. REGLAS DE TEMPERATURA DEL SUELO
+============================================================
+
+REGLA 2.1 - Temperatura en error
+SI temperatura == ERROR
+ENTONCES mostrar:
+"No se recibió lectura de temperatura del suelo. Revise el cableado, alimentación y comunicación del sensor."
+
+REGLA 2.2 - Temperatura baja
+SI temperatura < 15°C
+ENTONCES mostrar:
+"La temperatura del suelo está baja. El crecimiento del cultivo puede ser más lento, especialmente en germinación o desarrollo temprano. Mantenga monitoreo antes de aplicar fertilizantes."
+
+REGLA 2.3 - Temperatura adecuada
+SI temperatura >= 15°C Y temperatura <= 28°C
+ENTONCES mostrar:
+"La temperatura del suelo está en un rango aceptable para muchos cultivos. Mantenga el monitoreo."
+
+REGLA 2.4 - Temperatura alta
+SI temperatura > 28°C Y temperatura <= 35°C
+ENTONCES mostrar:
+"La temperatura del suelo está alta. Revise humedad, cobertura vegetal y exposición directa al sol. Puede aumentar la pérdida de agua."
+
+REGLA 2.5 - Temperatura muy alta
+SI temperatura > 35°C
+ENTONCES mostrar:
+"La temperatura del suelo es muy alta. Existe riesgo de estrés para el cultivo. Priorice conservación de humedad, cobertura del suelo y riego en horas frescas si el cultivo lo requiere."
+
+============================================================
+3. REGLAS DE HUMEDAD DEL SUELO
+============================================================
+
+REGLA 3.1 - Humedad en error
+SI humedad == ERROR
+ENTONCES mostrar:
+"No se recibió lectura de humedad. No se recomienda decidir riego con esta medición. Verifique que la sonda esté bien enterrada y respondiendo correctamente."
+
+REGLA 3.2 - Humedad muy baja
+SI humedad < 25%
+ENTONCES mostrar:
+"La humedad del suelo está muy baja. Se recomienda revisar riego lo antes posible, especialmente si el cultivo está en germinación, floración o llenado de fruto. Evite regar al mediodía; es mejor hacerlo temprano en la mañana o al final de la tarde."
+
+REGLA 3.3 - Humedad baja
+SI humedad >= 25% Y humedad < 40%
+ENTONCES mostrar:
+"La humedad está por debajo del nivel recomendado. Revise si el suelo se está secando rápido, si hay compactación o si el cultivo muestra marchitez. Puede programar un riego moderado y volver a medir después."
+
+REGLA 3.4 - Humedad adecuada
+SI humedad >= 40% Y humedad <= 70%
+ENTONCES mostrar:
+"La humedad del suelo se encuentra en un rango aceptable. Mantenga el monitoreo y evite riegos innecesarios para no desperdiciar agua ni lavar nutrientes."
+
+REGLA 3.5 - Humedad alta
+SI humedad > 70% Y humedad <= 85%
+ENTONCES mostrar:
+"La humedad está alta. No se recomienda regar por ahora. Revise si hay encharcamiento, mal drenaje o riesgo de enfermedades por exceso de humedad."
+
+REGLA 3.6 - Humedad muy alta
+SI humedad > 85%
+ENTONCES mostrar:
+"El suelo presenta exceso de humedad. Suspenda el riego temporalmente y revise drenajes, canales o zonas compactadas. El exceso de agua puede afectar raíces y reducir la disponibilidad de oxígeno en el suelo."
+
+============================================================
+4. REGLAS DE pH
+============================================================
+
+REGLA 4.1 - pH en error
+SI ph == ERROR
+ENTONCES mostrar:
+"No se pudo leer el pH del suelo. Evite hacer correcciones con cal, yeso agrícola o enmiendas hasta obtener una medición válida."
+
+REGLA 4.2 - pH muy ácido
+SI ph < 5.0
+ENTONCES mostrar:
+"El pH está muy bajo, con alta acidez. Esto puede limitar la disponibilidad de nutrientes. Confirme con una segunda medición y consulte asistencia técnica antes de aplicar correctivos."
+
+REGLA 4.3 - pH ácido
+SI ph >= 5.0 Y ph < 5.5
+ENTONCES mostrar:
+"El pH está bajo, lo que indica tendencia ácida. Esto puede afectar la disponibilidad de nutrientes para el cultivo. Se recomienda confirmar con otra medición y evaluar corrección de acidez con acompañamiento técnico."
+
+REGLA 4.4 - pH ligeramente ácido
+SI ph >= 5.5 Y ph < 6.0
+ENTONCES mostrar:
+"El suelo está ligeramente ácido. Para muchos cultivos puede ser manejable, pero conviene vigilar la tendencia. Si el histórico muestra que el pH sigue bajando, evalúe corrección del suelo."
+
+REGLA 4.5 - pH adecuado
+SI ph >= 6.0 Y ph <= 7.2
+ENTONCES mostrar:
+"El pH está en un rango favorable para la mayoría de cultivos. Mantenga el monitoreo y evite aplicar productos que alteren innecesariamente la acidez del suelo."
+
+REGLA 4.6 - pH alcalino
+SI ph > 7.2 Y ph <= 8.0
+ENTONCES mostrar:
+"El pH está alto, con tendencia alcalina. Esto puede dificultar la disponibilidad de algunos nutrientes. Evite aplicar cal u otros productos alcalinizantes sin recomendación técnica."
+
+REGLA 4.7 - pH muy alcalino
+SI ph > 8.0
+ENTONCES mostrar:
+"El pH es muy alto. Puede haber bloqueo de nutrientes. Confirme la medición y consulte asistencia técnica antes de aplicar correctivos o fertilizantes."
+
+============================================================
+5. REGLAS DE CONDUCTIVIDAD ELÉCTRICA CE
+============================================================
+
+REGLA 5.1 - CE en error
+SI ce == ERROR
+ENTONCES mostrar:
+"No se recibió lectura de conductividad eléctrica. No es posible evaluar riesgo de salinidad o exceso de fertilización con esta muestra."
+
+REGLA 5.2 - CE baja
+SI ce < 0.5
+ENTONCES mostrar:
+"La conductividad eléctrica es baja. Puede indicar baja concentración de nutrientes disponibles. Revise los valores de NPK y el estado del cultivo antes de decidir una fertilización."
+
+REGLA 5.3 - CE normal
+SI ce >= 0.5 Y ce <= 2.0
+ENTONCES mostrar:
+"La conductividad eléctrica está en un rango estable. No se observan señales fuertes de exceso de sales en esta medición."
+
+REGLA 5.4 - CE alta
+SI ce > 2.0 Y ce <= 4.0
+ENTONCES mostrar:
+"La conductividad eléctrica está alta. Puede existir acumulación de sales o exceso de fertilizante. Evite aplicar más fertilizante por ahora y revise drenaje."
+
+REGLA 5.5 - CE muy alta
+SI ce > 4.0
+ENTONCES mostrar:
+"La CE está muy alta. Existe riesgo de estrés salino para el cultivo. Suspenda fertilización, revise calidad del agua de riego y consulte asistencia técnica."
+
+============================================================
+6. REGLAS DE NITRÓGENO
+============================================================
+
+REGLA 6.1 - Nitrógeno en error
+SI nitrogeno == ERROR
+ENTONCES mostrar:
+"No se pudo leer el nitrógeno. No se recomienda decidir fertilización nitrogenada con esta medición."
+
+REGLA 6.2 - Nitrógeno bajo
+SI nitrogeno < 20
+ENTONCES mostrar:
+"El nitrógeno está bajo. Esto puede afectar el crecimiento vegetativo, el color de las hojas y el desarrollo general de la planta. Revise el cultivo y considere fertilización nitrogenada según cultivo y etapa."
+
+REGLA 6.3 - Nitrógeno medio
+SI nitrogeno >= 20 Y nitrogeno <= 50
+ENTONCES mostrar:
+"El nitrógeno se encuentra en nivel aceptable. Mantenga el plan de manejo y evite sobrefertilizar."
+
+REGLA 6.4 - Nitrógeno alto
+SI nitrogeno > 50
+ENTONCES mostrar:
+"El nitrógeno está alto. No se recomienda aplicar más fertilizante nitrogenado por ahora. Monitoree el cultivo para evitar exceso de follaje o mayor susceptibilidad a enfermedades."
+
+============================================================
+7. REGLAS DE FÓSFORO
+============================================================
+
+REGLA 7.1 - Fósforo en error
+SI fosforo == ERROR
+ENTONCES mostrar:
+"No se pudo leer el fósforo. No se recomienda decidir fertilización fosfatada con esta medición."
+
+REGLA 7.2 - Fósforo bajo
+SI fosforo < 15
+ENTONCES mostrar:
+"El fósforo está bajo. Esto puede afectar el desarrollo de raíces, floración y establecimiento del cultivo. Revise si el pH está fuera de rango, porque un pH inadecuado puede bloquear la disponibilidad de fósforo."
+
+REGLA 7.3 - Fósforo medio
+SI fosforo >= 15 Y fosforo <= 40
+ENTONCES mostrar:
+"El fósforo está en un nivel aceptable. Mantenga el monitoreo, especialmente en etapas tempranas del cultivo o antes de floración."
+
+REGLA 7.4 - Fósforo alto
+SI fosforo > 40
+ENTONCES mostrar:
+"El fósforo está alto. Evite aplicar fertilizantes fosfatados sin necesidad. Un exceso puede desbalancear la nutrición del suelo."
+
+============================================================
+8. REGLAS DE POTASIO
+============================================================
+
+REGLA 8.1 - Potasio en error
+SI potasio == ERROR
+ENTONCES mostrar:
+"No se pudo leer el potasio. No se recomienda decidir fertilización potásica con esta medición."
+
+REGLA 8.2 - Potasio bajo
+SI potasio < 20
+ENTONCES mostrar:
+"El potasio está bajo. Esto puede afectar resistencia de la planta, llenado de frutos, calidad de cosecha y tolerancia al estrés. Revise el cultivo y considere ajustar fertilización potásica."
+
+REGLA 8.3 - Potasio medio
+SI potasio >= 20 Y potasio <= 50
+ENTONCES mostrar:
+"El potasio se encuentra en nivel aceptable. Mantenga el monitoreo y priorice el equilibrio con nitrógeno y fósforo."
+
+REGLA 8.4 - Potasio alto
+SI potasio > 50
+ENTONCES mostrar:
+"El potasio está alto. No se recomienda aplicar más fuentes potásicas por ahora. Revise el balance con otros nutrientes."
+
+============================================================
+9. REGLAS COMBINADAS DE MEDICIÓN ACTUAL
+============================================================
+
+REGLA 9.1 - Humedad baja + temperatura alta
+SI humedad < 40% Y temperatura > 28°C
+ENTONCES mostrar:
+"La zona presenta humedad baja y temperatura alta. El cultivo puede estar bajo estrés hídrico. Revise riego, cobertura del suelo y posible uso de materia orgánica para conservar humedad."
+
+REGLA 9.2 - Humedad muy baja + NPK bajo
+SI humedad < 25% Y nitrogeno < 20 Y fosforo < 15 Y potasio < 20
+ENTONCES mostrar:
+"El suelo está seco y con nutrientes bajos. Primero corrija la humedad, porque el cultivo no aprovecha bien los nutrientes en suelo muy seco. Luego evalúe fertilización según cultivo."
+
+REGLA 9.3 - Humedad alta + CE alta
+SI humedad > 70% Y ce > 2.0
+ENTONCES mostrar:
+"Hay humedad alta y conductividad elevada. Puede existir acumulación de sales o fertilizante. Evite fertilizar nuevamente y revise drenaje."
+
+REGLA 9.4 - Humedad muy alta + temperatura baja
+SI humedad > 85% Y temperatura < 15°C
+ENTONCES mostrar:
+"La zona está muy húmeda y fría. Puede haber riesgo de bajo desarrollo radicular y enfermedades asociadas al exceso de humedad. Revise drenaje y evite riego."
+
+REGLA 9.5 - pH bajo + fósforo bajo
+SI ph < 5.5 Y fosforo < 15
+ENTONCES mostrar:
+"El pH ácido puede estar afectando la disponibilidad de fósforo. Antes de aumentar la fertilización fosfatada, revise corrección de acidez del suelo."
+
+REGLA 9.6 - pH alto + nutrientes bajos
+SI ph > 7.2 Y nitrogeno < 20 Y fosforo < 15 Y potasio < 20
+ENTONCES mostrar:
+"Aunque los nutrientes aparecen bajos, el pH alto puede estar limitando su disponibilidad. No aplique fertilizante sin revisar primero el manejo del pH."
+
+REGLA 9.7 - N bajo + humedad adecuada
+SI nitrogeno < 20 Y humedad >= 40% Y humedad <= 70%
+ENTONCES mostrar:
+"La humedad es adecuada, pero el nitrógeno está bajo. El cultivo podría aprovechar una fertilización nitrogenada si está en etapa de crecimiento activo."
+
+REGLA 9.8 - N bajo + humedad baja
+SI nitrogeno < 20 Y humedad < 40%
+ENTONCES mostrar:
+"El nitrógeno está bajo, pero también hay poca humedad. Antes de fertilizar, revise riego, porque con suelo seco el cultivo no aprovecha bien los nutrientes."
+
+REGLA 9.9 - CE alta + NPK alto
+SI ce > 2.0 Y nitrogeno > 50 Y fosforo > 40 Y potasio > 50
+ENTONCES mostrar:
+"Los nutrientes y la conductividad están altos. Existe posible exceso de fertilización. Suspenda aplicaciones y evite aumentar la salinidad del suelo."
+
+REGLA 9.10 - CE baja + NPK bajo
+SI ce < 0.5 Y nitrogeno < 20 Y fosforo < 15 Y potasio < 20
+ENTONCES mostrar:
+"La CE y los nutrientes están bajos. Puede haber baja disponibilidad nutricional. Revise el estado del cultivo y el plan de fertilización."
+
+REGLA 9.11 - pH adecuado + humedad adecuada + NPK medio
+SI ph >= 6.0 Y ph <= 7.2 Y humedad >= 40% Y humedad <= 70% Y nitrogeno >= 20 Y nitrogeno <= 50 Y fosforo >= 15 Y fosforo <= 40 Y potasio >= 20 Y potasio <= 50
+ENTONCES mostrar:
+"La zona presenta condiciones estables. Mantenga el monitoreo y evite aplicaciones innecesarias de agua o fertilizantes."
+
+REGLA 9.12 - pH fuera de rango + CE alta
+SI (ph < 5.5 O ph > 7.2) Y ce > 2.0
+ENTONCES mostrar:
+"El suelo tiene pH fuera de rango y conductividad alta. Evite aplicar productos sin diagnóstico adicional, porque puede aumentar el desbalance del suelo."
+
+============================================================
+10. REGLAS CON HISTÓRICO DE HUMEDAD
+============================================================
+
+REGLA 10.1 - Humedad bajando varios días
+SI promedio_humedad_últimas_3_mediciones < promedio_humedad_3_mediciones_anteriores - 5%
+ENTONCES mostrar:
+"La humedad del suelo viene disminuyendo durante los últimos días. Si la tendencia continúa, esta zona puede necesitar riego próximamente."
+
+REGLA 10.2 - Humedad bajando y actual baja
+SI tendencia_humedad == bajando Y humedad < 40%
+ENTONCES mostrar:
+"La humedad está baja y además viene disminuyendo. Priorice revisión de riego en esta zona."
+
+REGLA 10.3 - Humedad estable
+SI variación_humedad_7_días < 10%
+ENTONCES mostrar:
+"La humedad se ha mantenido estable. Esta zona presenta buen comportamiento hídrico en el periodo analizado."
+
+REGLA 10.4 - Humedad muy variable
+SI variación_humedad_7_días > 30%
+ENTONCES mostrar:
+"La humedad cambia demasiado entre mediciones. Puede indicar riego irregular, mala ubicación del sensor o suelo con drenaje desigual."
+
+REGLA 10.5 - Humedad subiendo sin riego reportado
+SI tendencia_humedad == subiendo Y riego_reportado == false
+ENTONCES mostrar:
+"La humedad ha aumentado sin registro de riego. Puede deberse a lluvia reciente, filtraciones o acumulación de agua. Revise drenajes y posible encharcamiento."
+
+REGLA 10.6 - Humedad alta persistente
+SI humedad_promedio_7_días > 75%
+ENTONCES mostrar:
+"La humedad se ha mantenido alta durante varios días. Revise drenaje, compactación y riesgo de enfermedades por exceso de humedad."
+
+REGLA 10.7 - Humedad baja persistente
+SI humedad_promedio_7_días < 35%
+ENTONCES mostrar:
+"La humedad se ha mantenido baja durante varios días. Esta zona requiere revisión del manejo de riego y conservación de humedad."
+
+============================================================
+11. REGLAS CON HISTÓRICO DE pH
+============================================================
+
+REGLA 11.1 - pH bajando
+SI promedio_ph_últimas_3 < promedio_ph_anteriores_3 - 0.3
+ENTONCES mostrar:
+"El pH muestra una tendencia a volverse más ácido. Haga seguimiento y confirme con análisis de suelo antes de aplicar correctivos."
+
+REGLA 11.2 - pH subiendo
+SI promedio_ph_últimas_3 > promedio_ph_anteriores_3 + 0.3
+ENTONCES mostrar:
+"El pH viene aumentando. Revise si se han aplicado enmiendas, cales o aguas de riego con alta alcalinidad."
+
+REGLA 11.3 - pH estable
+SI variación_ph_7_días <= 0.3
+ENTONCES mostrar:
+"El pH se ha mantenido estable. No hay cambios fuertes en la acidez del suelo durante el periodo evaluado."
+
+REGLA 11.4 - pH ácido persistente
+SI ph_promedio_7_días < 5.5
+ENTONCES mostrar:
+"El pH se ha mantenido ácido en varias mediciones. Evalúe corrección de acidez con asistencia técnica."
+
+REGLA 11.5 - pH alcalino persistente
+SI ph_promedio_7_días > 7.2
+ENTONCES mostrar:
+"El pH se ha mantenido alto en varias mediciones. Puede haber limitación en disponibilidad de nutrientes."
+
+============================================================
+12. REGLAS CON HISTÓRICO DE CE
+============================================================
+
+REGLA 12.1 - CE subiendo
+SI promedio_ce_últimas_3 > promedio_ce_anteriores_3 + 0.3
+ENTONCES mostrar:
+"La conductividad eléctrica viene aumentando. Puede indicar acumulación de sales o fertilizantes. Revise fertilización, calidad del agua y drenaje."
+
+REGLA 12.2 - CE bajando
+SI promedio_ce_últimas_3 < promedio_ce_anteriores_3 - 0.3
+ENTONCES mostrar:
+"La conductividad viene disminuyendo. Puede deberse a lavado por lluvia o riego. Revise si también han disminuido los nutrientes disponibles."
+
+REGLA 12.3 - CE alta persistente
+SI ce_promedio_7_días > 2.0
+ENTONCES mostrar:
+"La CE se ha mantenido alta en varias mediciones. Esta zona requiere atención por posible salinidad o exceso de fertilización."
+
+REGLA 12.4 - CE muy alta persistente
+SI ce_promedio_7_días > 4.0
+ENTONCES mostrar:
+"La CE se ha mantenido en nivel muy alto. Existe riesgo de estrés salino persistente. Suspenda fertilización y consulte asistencia técnica."
+
+============================================================
+13. REGLAS CON HISTÓRICO DE NUTRIENTES
+============================================================
+
+REGLA 13.1 - Nitrógeno bajando rápido
+SI promedio_n_últimas_3 < promedio_n_anteriores_3 - 10
+ENTONCES mostrar:
+"El nitrógeno ha disminuido rápidamente. Puede deberse a absorción del cultivo, lavado por lluvias o falta de reposición. Revise cultivo y calendario de fertilización."
+
+REGLA 13.2 - Nitrógeno bajo persistente
+SI n_promedio_7_días < 20
+ENTONCES mostrar:
+"El nitrógeno se ha mantenido bajo durante varias mediciones. Esta zona puede tener deficiencia persistente y requiere ajuste del plan nutricional."
+
+REGLA 13.3 - Nitrógeno alto persistente
+SI n_promedio_7_días > 50
+ENTONCES mostrar:
+"El nitrógeno se mantiene alto. Evite nuevas aplicaciones nitrogenadas por ahora para reducir pérdidas y evitar desbalances."
+
+REGLA 13.4 - Fósforo bajo persistente
+SI p_promedio_7_días < 15
+ENTONCES mostrar:
+"El fósforo se ha mantenido bajo. Revise pH, disponibilidad real para el cultivo y estrategia de fertilización de fondo."
+
+REGLA 13.5 - Potasio bajando
+SI promedio_k_últimas_3 < promedio_k_anteriores_3 - 10
+ENTONCES mostrar:
+"El potasio viene disminuyendo. Esto puede afectar llenado de fruto, resistencia de la planta y calidad de cosecha."
+
+REGLA 13.6 - Potasio bajo persistente
+SI k_promedio_7_días < 20
+ENTONCES mostrar:
+"El potasio se ha mantenido bajo. Revise la demanda del cultivo, especialmente en etapas de producción o llenado."
+
+REGLA 13.7 - NPK bajo persistente
+SI n_promedio_7_días < 20 Y p_promedio_7_días < 15 Y k_promedio_7_días < 20
+ENTONCES mostrar:
+"Los nutrientes principales se han mantenido bajos. Esta zona requiere revisión integral del plan de fertilización y del estado del cultivo."
+
+REGLA 13.8 - NPK alto persistente + CE alta
+SI n_promedio_7_días > 50 Y p_promedio_7_días > 40 Y k_promedio_7_días > 50 Y ce_promedio_7_días > 2.0
+ENTONCES mostrar:
+"Los nutrientes y la CE se mantienen altos. Puede haber exceso de fertilización y riesgo de salinidad. Suspenda aplicaciones y revise manejo nutricional."
+
+============================================================
+14. REGLAS ENTRE ZONAS DE LA FINCA
+============================================================
+
+REGLA 14.1 - Zona más seca
+SI nodo.humedad == mínimo_humedad_entre_nodos
+ENTONCES mostrar:
+"Esta es la zona más seca de la finca en la última medición. Priorice revisión de riego en este punto."
+
+REGLA 14.2 - Zona más húmeda
+SI nodo.humedad == máximo_humedad_entre_nodos
+ENTONCES mostrar:
+"Esta es la zona con mayor humedad. Revise si hay acumulación de agua, mal drenaje o exceso de riego."
+
+REGLA 14.3 - Zona con pH más alejado
+SI abs(nodo.ph - 6.5) == máximo_entre_nodos
+ENTONCES mostrar:
+"Esta zona presenta el pH más alejado del rango recomendado. Haga seguimiento y compare con análisis de suelo."
+
+REGLA 14.4 - Zona con mayor CE
+SI nodo.ce == máximo_ce_entre_nodos
+ENTONCES mostrar:
+"Esta zona tiene la conductividad eléctrica más alta. Revise si se acumula fertilizante o si el drenaje es deficiente."
+
+REGLA 14.5 - Zona con nutrientes más bajos
+SI nodo.npk_score == mínimo_npk_score_entre_nodos
+ENTONCES mostrar:
+"Esta zona presenta los niveles más bajos de nutrientes. Puede requerir atención prioritaria en el plan de fertilización."
+
+REGLA 14.6 - Zona más estable
+SI nodo.variación_general == mínima_variación_entre_nodos
+ENTONCES mostrar:
+"Esta zona ha mantenido valores más estables en el histórico. Puede usarse como referencia para comparar otras áreas de la finca."
+
+REGLA 14.7 - Zona con datos más antiguos
+SI nodo.last_seen == más_antiguo_entre_nodos
+ENTONCES mostrar:
+"Este nodo tiene la información más antigua. Revise conectividad, batería o funcionamiento del equipo."
+
+============================================================
+15. REGLAS POR CULTIVO
+============================================================
+
+REGLA 15.1 - Papa
+SI cultivo == "papa"
+ENTONCES mostrar:
+"Para papa, vigile especialmente humedad, pH y potasio. Evite exceso de humedad porque puede favorecer enfermedades. Si el potasio está bajo, puede afectar llenado y calidad del tubérculo."
+
+REGLA 15.2 - Maíz
+SI cultivo == "maiz" O cultivo == "maíz"
+ENTONCES mostrar:
+"Para maíz, el nitrógeno es clave en crecimiento vegetativo. Si el nitrógeno está bajo y la humedad es adecuada, revise posibilidad de fertilización nitrogenada según la etapa del cultivo."
+
+REGLA 15.3 - Café
+SI cultivo == "cafe" O cultivo == "café"
+ENTONCES mostrar:
+"Para café, revise estabilidad de humedad y pH. Cambios fuertes en humedad pueden afectar floración y desarrollo del fruto. Mantenga cobertura vegetal o materia orgánica para conservar humedad."
+
+REGLA 15.4 - Plátano
+SI cultivo == "platano" O cultivo == "plátano"
+ENTONCES mostrar:
+"Para plátano, el potasio es muy importante. Si el potasio está bajo, puede afectar desarrollo del racimo y resistencia de la planta."
+
+REGLA 15.5 - Yuca
+SI cultivo == "yuca"
+ENTONCES mostrar:
+"Para yuca, evite encharcamientos y mantenga buena estructura del suelo. Revise humedad y potasio, especialmente durante desarrollo de raíces."
+
+REGLA 15.6 - Tomate
+SI cultivo == "tomate"
+ENTONCES mostrar:
+"Para tomate, evite excesos de humedad y cambios bruscos de riego. La humedad alta constante puede aumentar riesgo de enfermedades."
+
+REGLA 15.7 - Cebolla
+SI cultivo == "cebolla"
+ENTONCES mostrar:
+"Para cebolla, revise humedad y drenaje. El exceso de agua puede afectar bulbos y favorecer enfermedades."
+
+REGLA 15.8 - Fríjol
+SI cultivo == "frijol" O cultivo == "fríjol"
+ENTONCES mostrar:
+"Para fríjol, evite exceso de humedad y revise pH. El encharcamiento puede afectar raíces y desarrollo de la planta."
+
+REGLA 15.9 - Cacao
+SI cultivo == "cacao"
+ENTONCES mostrar:
+"Para cacao, mantenga humedad estable y buen drenaje. Evite suelos encharcados y revise sombra y cobertura."
+
+REGLA 15.10 - Pastos
+SI cultivo == "pastos"
+ENTONCES mostrar:
+"Para pastos, revise humedad y nitrógeno. Si el nitrógeno está bajo y hay humedad suficiente, puede afectar recuperación y crecimiento del forraje."
+
+REGLA 15.11 - Hortalizas
+SI cultivo == "hortalizas"
+ENTONCES mostrar:
+"Para hortalizas, vigile humedad, CE y pH. Son cultivos sensibles a cambios bruscos de agua y salinidad."
+
+============================================================
+16. REGLAS POR TIPO DE ZONA COLOMBIANA
+============================================================
+
+REGLA 16.1 - Tierra caliente
+SI zona_climatica == "tierra_caliente"
+ENTONCES mostrar:
+"En zonas cálidas, la pérdida de humedad puede ser más rápida. Si la humedad baja durante varios días, priorice riego temprano en la mañana o al final de la tarde."
+
+REGLA 16.2 - Tierra fría
+SI zona_climatica == "tierra_fria"
+ENTONCES mostrar:
+"En zonas frías, el exceso de humedad puede mantenerse por más tiempo. Si la humedad está alta, revise drenajes y evite riegos innecesarios."
+
+REGLA 16.3 - Tierra templada
+SI zona_climatica == "tierra_templada"
+ENTONCES mostrar:
+"En zonas templadas, mantenga seguimiento de humedad y pH. Compare las zonas de la finca para no regar o fertilizar de manera uniforme cuando no sea necesario."
+
+REGLA 16.4 - Zona seca
+SI zona_climatica == "zona_seca"
+ENTONCES mostrar:
+"En zonas secas, priorice conservación de humedad con cobertura, materia orgánica y riegos eficientes."
+
+REGLA 16.5 - Zona húmeda
+SI zona_climatica == "zona_humeda"
+ENTONCES mostrar:
+"En zonas húmedas, priorice drenaje y prevención de enfermedades asociadas al exceso de agua."
+
+REGLA 16.6 - Ladera
+SI terreno == "ladera"
+ENTONCES mostrar:
+"En terrenos de ladera, humedad y nutrientes pueden variar mucho entre parte alta y baja del lote. Compare nodos por ubicación antes de fertilizar toda la finca por igual."
+
+REGLA 16.7 - Zona plana
+SI terreno == "plano"
+ENTONCES mostrar:
+"En zonas planas, revise puntos con humedad alta persistente porque pueden indicar mal drenaje o compactación."
+
+REGLA 16.8 - Sabana
+SI terreno == "sabana"
+ENTONCES mostrar:
+"En zonas de sabana, vigile acidez del suelo, humedad y disponibilidad de nutrientes. Use el histórico para detectar zonas más secas o compactadas."
+
+============================================================
+17. ALERTAS DEL DASHBOARD
+============================================================
+
+REGLA 17.1 - Alerta crítica por humedad muy baja
+SI humedad < 25%
+ENTONCES alerta = "CRÍTICA: Humedad muy baja. Riesgo de estrés hídrico."
+
+REGLA 17.2 - Alerta crítica por humedad muy alta
+SI humedad > 85%
+ENTONCES alerta = "CRÍTICA: Humedad muy alta. Riesgo de encharcamiento."
+
+REGLA 17.3 - Alerta crítica por CE muy alta
+SI ce > 4.0
+ENTONCES alerta = "CRÍTICA: CE muy alta. Posible acumulación de sales."
+
+REGLA 17.4 - Alerta por pH fuera de rango
+SI ph < 5.5 O ph > 7.2
+ENTONCES alerta = "ATENCIÓN: pH fuera de rango. Puede afectar disponibilidad de nutrientes."
+
+REGLA 17.5 - Alerta por NPK bajo
+SI nitrogeno < 20 O fosforo < 15 O potasio < 20
+ENTONCES alerta = "ATENCIÓN: Uno o más nutrientes están bajos. Revise manejo nutricional."
+
+REGLA 17.6 - Alerta por nodo sin datos
+SI nodo_offline == true
+ENTONCES alerta = "ATENCIÓN: Nodo sin datos recientes. Revise batería o conexión."
+
+REGLA 17.7 - Alerta por GPS no válido
+SI gps_valid == false
+ENTONCES alerta = "ATENCIÓN: GPS no válido. La medición no tiene ubicación confiable."
+
+REGLA 17.8 - Alerta por SD
+SI sd_status == error
+ENTONCES alerta = "ATENCIÓN: Error de SD. Los datos podrían no estar guardándose."
+
+============================================================
+18. REGLAS DE MANTENIMIENTO DEL EQUIPO
+============================================================
+
+REGLA 18.1 - Revisar sensor
+SI sensor_error == true
+ENTONCES mostrar:
+"Revise que el sensor esté bien conectado, sin humedad en los conectores y enterrado correctamente."
+
+REGLA 18.2 - Revisar RS485
+SI error_modbus == true
+ENTONCES mostrar:
+"Revise conexiones A/B del módulo RS485, alimentación del sensor, baudrate, dirección Modbus y pines RX/TX."
+
+REGLA 18.3 - Revisar GPS
+SI gps_valid == false durante más de 10 minutos
+ENTONCES mostrar:
+"Ubique el equipo en una zona con vista al cielo. El GPS puede tardar varios minutos en obtener ubicación."
+
+REGLA 18.4 - Revisar SD
+SI sd_status == error
+ENTONCES mostrar:
+"Extraiga la tarjeta SD, revise formato FAT32, espacio disponible y vuelva a insertarla con el equipo apagado."
+
+REGLA 18.5 - Reiniciar nodo
+SI errores_consecutivos >= 3
+ENTONCES mostrar:
+"Se detectaron varios errores consecutivos. Reinicie el nodo y tome una nueva medición."
+
+REGLA 18.6 - Sensor mal ubicado
+SI humedad_varía_mucho Y otros_nodos_estables
+ENTONCES mostrar:
+"La ubicación del sensor puede no ser representativa. Revise si está cerca de una gotera, borde del lote, canal o zona compactada."
+
+============================================================
+19. REGLAS DE RESUMEN AUTOMÁTICO PARA EL CAMPESINO
+============================================================
+
+REGLA 19.1 - Resumen estable
+SI todas_las_variables_en_rango == true
+ENTONCES resumen:
+"La zona presenta condiciones estables. La humedad está en un nivel adecuado, el pH se mantiene en rango favorable y los nutrientes principales no muestran alertas graves. Continúe monitoreando y evite aplicaciones innecesarias."
+
+REGLA 19.2 - Resumen con humedad baja
+SI humedad < 40%
+ENTONCES resumen:
+"La zona presenta humedad baja. El cultivo puede empezar a sufrir estrés si esta condición se mantiene. Revise riego, observe si hay marchitez y vuelva a medir después del riego."
+
+REGLA 19.3 - Resumen con humedad alta
+SI humedad > 70%
+ENTONCES resumen:
+"La zona presenta humedad alta. Evite regar por ahora y revise drenaje, encharcamiento o compactación."
+
+REGLA 19.4 - Resumen con pH ácido + fósforo bajo
+SI ph < 5.5 Y fosforo < 15
+ENTONCES resumen:
+"La zona presenta pH ácido y fósforo bajo. Esta combinación puede limitar desarrollo de raíces y disponibilidad de nutrientes. Confirme con una nueva medición y consulte asistencia técnica antes de aplicar correctivos."
+
+REGLA 19.5 - Resumen con CE alta
+SI ce > 2.0
+ENTONCES resumen:
+"La zona presenta conductividad eléctrica alta. Puede existir acumulación de sales o exceso de fertilización. Evite nuevas aplicaciones, revise drenaje y observe señales de estrés en las plantas."
+
+REGLA 19.6 - Resumen histórico preocupante
+SI humedad_tendencia == bajando Y humedad_actual < 40%
+ENTONCES resumen:
+"Durante los últimos días, la humedad de esta zona ha disminuido de forma constante. La tendencia indica que podría necesitar riego pronto. Revise el suelo en campo y programe riego si el cultivo lo requiere."
+
+============================================================
+20. ESTRUCTURA RECOMENDADA DE SALIDA JSON
+============================================================
+
+Cada nodo debería generar un objeto similar:
+
+{
+  "node_id": "zona_1",
+  "node_name": "Lote de maíz",
+  "status": "warning",
+  "priority": "media",
+  "summary": "Humedad baja y pH ligeramente ácido.",
+  "recommendations": [
+    "Revisar riego en esta zona.",
+    "Evitar fertilizar hasta mejorar humedad.",
+    "Confirmar pH con una segunda medición."
+  ],
+  "technical_alerts": [
+    "GPS válido",
+    "SD funcionando",
+    "Batería 83%"
+  ]
+}
+
+Estados sugeridos:
+- ok: condiciones estables
+- warning: requiere atención
+- critical: requiere acción prioritaria
+- error: medición inválida o problema técnico
+
+Prioridades sugeridas:
+- baja
+- media
+- alta
+- crítica
+
+============================================================
+21. REGLA MAESTRA DE PRIORIDAD
+============================================================
+
+Orden de prioridad para mostrar recomendaciones:
+
+1. Errores técnicos críticos: sensor, SD, batería, GPS, comunicación.
+2. Riesgos críticos de cultivo: humedad muy baja, humedad muy alta, CE muy alta.
+3. pH fuera de rango.
+4. Nutrientes bajos o altos.
+5. Tendencias históricas.
+6. Comparación entre zonas.
+7. Consejos por cultivo y zona climática.
+
+Si hay error técnico crítico, no dar recomendaciones agrícolas definitivas.
+
+============================================================
+22. REGLAS PARA NO GENERAR MALAS RECOMENDACIONES
+============================================================
+
+REGLA 22.1
+No recomendar aplicar fertilizante si humedad < 25%, porque el cultivo puede no aprovecharlo adecuadamente.
+
+REGLA 22.2
+No recomendar aplicar más fertilizante si CE > 2.0, salvo que exista confirmación técnica.
+
+REGLA 22.3
+No recomendar aplicar cal si pH es desconocido o está en ERROR.
+
+REGLA 22.4
+No recomendar riego si humedad > 70%, salvo que el cultivo específico lo requiera y haya validación externa.
+
+REGLA 22.5
+No tomar decisiones por una sola medición extrema. Recomendar repetir medición si el valor es muy diferente al histórico.
+
+REGLA 22.6
+Si un valor actual cambia más de 50% frente al promedio histórico, marcar como posible lectura anómala y recomendar repetir medición.
+
+REGLA 22.7
+Si dos sensores cercanos muestran valores muy diferentes, recomendar revisar instalación, profundidad y ubicación de las sondas.
+
+============================================================
+23. REGLAS DE HISTÓRICO Y CÁLCULOS SUGERIDOS
+============================================================
+
+Calcular para cada variable:
+- última medición válida
+- promedio de 24 horas
+- promedio de 7 días
+- mínimo de 7 días
+- máximo de 7 días
+- variación porcentual
+- tendencia: subiendo, bajando, estable
+- cantidad de mediciones inválidas
+- tiempo desde última medición
+
+Tendencia simple:
+- promedio_ultimas_3 = promedio de las últimas 3 mediciones válidas
+- promedio_anteriores_3 = promedio de las 3 mediciones válidas anteriores
+
+SI promedio_ultimas_3 > promedio_anteriores_3 + umbral
+ENTONCES tendencia = "subiendo"
+
+SI promedio_ultimas_3 < promedio_anteriores_3 - umbral
+ENTONCES tendencia = "bajando"
+
+SI diferencia dentro del umbral
+ENTONCES tendencia = "estable"
+
+Umbrales sugeridos:
+- humedad: 5%
+- pH: 0.3
+- CE: 0.3
+- N: 10 unidades
+- P: 8 unidades
+- K: 10 unidades
+- batería: 10%
+
+============================================================
+24. EJEMPLO PARA EL ESTADO DE LA IMAGEN ACTUAL
+============================================================
+
+Condición:
+- Temperatura: ERROR
+- Humedad: ERROR
+- pH: ERROR
+- CE: ERROR
+- N: ERROR
+- P: ERROR
+- K: ERROR
+- Batería: 100%
+- GPS: NO VÁLIDO
+
+Salida recomendada:
+"Nodo principal - Casa finca: Sin medición válida. No se recibieron datos válidos de temperatura, humedad, pH, conductividad eléctrica, nitrógeno, fósforo ni potasio. El GPS tampoco tiene ubicación válida. La batería está al 100%, por lo que el nodo sí tiene energía. Revise conexión del sensor de suelo, módulo RS485, pines RX/TX, alimentación del sensor y configuración Modbus. Ubique el nodo a cielo abierto para obtener GPS. No se recomienda tomar decisiones de riego, fertilización o corrección de suelo hasta obtener una medición válida."
+

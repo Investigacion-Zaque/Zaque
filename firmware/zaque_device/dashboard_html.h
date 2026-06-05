@@ -322,6 +322,55 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
             background: #45a049;
         }
         
+        .alerts-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 5px solid;
+            background-size: 20px 20px;
+        }
+        
+        .alert-critical {
+            background-color: #ffebee;
+            border-left-color: #d32f2f;
+            color: #b71c1c;
+        }
+        
+        .alert-warning {
+            background-color: #fff3e0;
+            border-left-color: #f57c00;
+            color: #e65100;
+        }
+        
+        .alert-info {
+            background-color: #e3f2fd;
+            border-left-color: #1976d2;
+            color: #0d47a1;
+        }
+        
+        .alert-success {
+            background-color: #e8f5e9;
+            border-left-color: #388e3c;
+            color: #1b5e20;
+        }
+        
+        .alert-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .alert-message {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
         @media (max-width: 600px) {
             .nodes-grid {
                 grid-template-columns: 1fr;
@@ -344,6 +393,8 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
             <p>Sistema local de monitoreo agrícola</p>
             <p id="status-time" style="font-size: 12px; margin-top: 10px;">Actualizado: --</p>
         </header>
+        
+        <div class="alerts-container" id="alerts"></div>
         
         <div class="summary" id="summary"></div>
         
@@ -413,9 +464,11 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
             }
         }
         
-        // Renderizar interfaz
         function render() {
             if (!latestData || !latestData.nodes) return;
+            
+            // Alertas
+            renderAlerts();
             
             // Resumen
             renderSummary();
@@ -434,6 +487,103 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
                 second: '2-digit'
             });
             document.getElementById('status-time').textContent = 'Actualizado: ' + now;
+        }
+        
+        function renderAlerts() {
+            const nodes = latestData.nodes || [];
+            const alertsContainer = document.getElementById('alerts');
+            alertsContainer.innerHTML = '';
+            
+            const criticalAlerts = [];
+            const warningAlerts = [];
+            const infoAlerts = [];
+            let hasNoMeasurement = false;
+            
+            nodes.forEach(node => {
+                // Analizar recomendación para extraer alertas
+                if (node.recommendation) {
+                    const rec = node.recommendation;
+                    if (rec.includes('❌ SIN MEDICIÓN') || rec.includes('MEDICIÓN INVÁLIDA')) {
+                        criticalAlerts.push({
+                            node: node.node_name || node.node_id,
+                            message: rec,
+                            type: 'no_measurement'
+                        });
+                        hasNoMeasurement = true;
+                    } else if (rec.includes('CRÍTICA') || rec.includes('🔴') || rec.includes('INVÁLIDA')) {
+                        criticalAlerts.push({
+                            node: node.node_name || node.node_id,
+                            message: rec
+                        });
+                    } else if (rec.includes('🟠') || rec.includes('ATENCIÓN')) {
+                        warningAlerts.push({
+                            node: node.node_name || node.node_id,
+                            message: rec
+                        });
+                    } else if (rec.includes('✅')) {
+                        infoAlerts.push({
+                            node: node.node_name || node.node_id,
+                            message: rec
+                        });
+                    } else {
+                        infoAlerts.push({
+                            node: node.node_name || node.node_id,
+                            message: rec
+                        });
+                    }
+                } else if (node.status === 'waiting_first_measurement') {
+                    // Nodo sin medición aún
+                    criticalAlerts.push({
+                        node: node.node_name || node.node_id,
+                        message: "❌ ESPERANDO PRIMERA MEDICIÓN: El nodo está disponible pero aún no ha enviado datos. Si continuamente no recibe datos, revise: 1) Conexión del sensor 2) Alimentación 3) Comunicación RS485 4) Firmware."
+                    });
+                    hasNoMeasurement = true;
+                }
+            });
+            
+            // Mostrar alertas críticas primero
+            criticalAlerts.forEach(alert => {
+                const alertEl = document.createElement('div');
+                alertEl.className = 'alert alert-critical';
+                alertEl.innerHTML = `
+                    <div class="alert-title">⚠️ ALERTA CRÍTICA: ${alert.node}</div>
+                    <div class="alert-message">${alert.message}</div>
+                `;
+                alertsContainer.appendChild(alertEl);
+            });
+            
+            // Luego advertencias
+            warningAlerts.forEach(alert => {
+                const alertEl = document.createElement('div');
+                alertEl.className = 'alert alert-warning';
+                alertEl.innerHTML = `
+                    <div class="alert-title">⚠️ ATENCIÓN: ${alert.node}</div>
+                    <div class="alert-message">${alert.message}</div>
+                `;
+                alertsContainer.appendChild(alertEl);
+            });
+            
+            // Información general
+            infoAlerts.forEach(alert => {
+                const alertEl = document.createElement('div');
+                alertEl.className = 'alert alert-info';
+                alertEl.innerHTML = `
+                    <div class="alert-title">ℹ️ ${alert.node}</div>
+                    <div class="alert-message">${alert.message}</div>
+                `;
+                alertsContainer.appendChild(alertEl);
+            });
+            
+            // Si no hay alertas Y hay mediciones, mostrar mensaje positivo
+            if (criticalAlerts.length === 0 && warningAlerts.length === 0 && infoAlerts.length === 0 && !hasNoMeasurement) {
+                const alertEl = document.createElement('div');
+                alertEl.className = 'alert alert-success';
+                alertEl.innerHTML = `
+                    <div class="alert-title">✅ Sin alertas críticas</div>
+                    <div class="alert-message">El sistema está funcionando correctamente. Revise los detalles de cada nodo para más información.</div>
+                `;
+                alertsContainer.appendChild(alertEl);
+            }
         }
         
         function renderError() {
