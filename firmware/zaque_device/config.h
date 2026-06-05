@@ -13,7 +13,7 @@
 // IDENTIFICACIÓN DEL NODO
 // ============================================================================
 #if DEVICE_ROLE == DEVICE_ROLE_MAIN
-  #define NODE_ID "main"
+  #define NODE_ID "zaque"
   #define NODE_NAME "Nodo principal - Casa finca"
 #else
   #define NODE_ID "zona_2"
@@ -26,8 +26,8 @@
 // CONFIGURACIÓN WiFi
 // ============================================================================
 // NOTA: Para producción, mover a secrets.h
-#define WIFI_SSID "Wifi"
-#define WIFI_PASSWORD "free6969"
+#define WIFI_SSID "Zaque"
+#define WIFI_PASSWORD "free12345"
 #define WIFI_TIMEOUT_MS 10000
 
 // ============================================================================
