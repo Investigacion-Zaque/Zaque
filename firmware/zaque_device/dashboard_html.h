@@ -32,8 +32,8 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
         }
         
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
+            width: 100%;
+            margin: 0;
         }
         
         header {
@@ -85,7 +85,7 @@ const char DASHBOARD_HTML[] PROGMEM = R"rawliteral(
         
         .nodes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: 1fr;
             gap: 20px;
             margin-bottom: 30px;
         }
