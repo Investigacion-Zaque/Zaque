@@ -79,7 +79,7 @@
 
 // Modbus configuration
 #define MODBUS_SLAVE_ADDRESS 1
-#define MODBUS_BAUD_RATE 9600
+#define MODBUS_BAUD_RATE 4800
 
 // ============================================================================
 // CONFIGURACIÓN DE ALMACENAMIENTO (microSD)

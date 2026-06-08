@@ -51,12 +51,15 @@ Recommendations* recommendations = nullptr;
 #endif
 
 unsigned long last_measurement_time = 0;
+unsigned long awake_start_time = 0;
+bool is_in_initial_awake = true;
 
 // ============================================================================
 // SETUP - Inicialización
 // ============================================================================
 
 void setup() {
+  awake_start_time = millis();
   // Serial para debug
 #if ENABLE_DEBUG_SERIAL
   Serial.begin(DEBUG_BAUD_RATE);
@@ -127,8 +130,40 @@ void setup() {
 // ============================================================================
 
 void loop() {
+  unsigned long current_time = millis();
+
+#if DEVICE_ROLE == DEVICE_ROLE_MAIN
+  // Gestión del periodo inicial de 5 minutos para el MAIN
+  if (is_in_initial_awake) {
+    if (current_time - awake_start_time > (5 * 60 * 1000)) {
+      is_in_initial_awake = false;
+#if ENABLE_DEBUG_SERIAL
+      Serial.println("→ Initial 5-minute awake period finished. Going to deep sleep...");
+      Serial.flush();
+#endif
+      // Cleanup antes de dormir
+      if (sensor_reader) sensor_reader->shutdown();
+      if (gps_reader) gps_reader->shutdown();
+      if (sd_logger) sd_logger->shutdown();
+      if (wifi_manager) wifi_manager->shutdown();
+      if (web_server) web_server->shutdown();
+
+      esp_sleep_enable_timer_wakeup(MEASUREMENT_INTERVAL_MINUTES * 60 * 1000000);
+      esp_deep_sleep_start();
+    }
+  }
+#endif
+
+  // Determinar el intervalo de medición
+  unsigned long interval = (MEASUREMENT_INTERVAL_MINUTES * 60 * 1000);
+#if DEVICE_ROLE == DEVICE_ROLE_MAIN
+  if (is_in_initial_awake) {
+    interval = 30 * 1000; // Medir cada 30 segundos durante los primeros 5 minutos
+  }
+#endif
+
   // Verificar si es hora de tomar una nueva medición
-  if (millis() - last_measurement_time < (MEASUREMENT_INTERVAL_MINUTES * 60 * 1000)) {
+  if (current_time - last_measurement_time < interval) {
     // Aún no es hora; hacer tareas del rol actual
 
 #if DEVICE_ROLE == DEVICE_ROLE_MAIN
@@ -143,7 +178,7 @@ void loop() {
   }
 
   // Es hora de tomar medición
-  last_measurement_time = millis();
+  last_measurement_time = current_time;
 
 #if ENABLE_DEBUG_SERIAL
   Serial.println("\n→ Taking measurement...");
@@ -219,6 +254,13 @@ void loop() {
   Serial.flush();
 #endif
   
+  // Cleanup antes de dormir
+  if (sensor_reader) sensor_reader->shutdown();
+  if (gps_reader) gps_reader->shutdown();
+  if (sd_logger) sd_logger->shutdown();
+  if (wifi_manager) wifi_manager->shutdown();
+  if (http_client) http_client->shutdown();
+
   esp_sleep_enable_timer_wakeup(MEASUREMENT_INTERVAL_MINUTES * 60 * 1000000);
   esp_deep_sleep_start();
   
