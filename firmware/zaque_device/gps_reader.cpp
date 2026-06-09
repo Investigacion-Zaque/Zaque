@@ -48,9 +48,13 @@ private:
     }
 
 #if ENABLE_DEBUG_SERIAL
-    Serial.println("! GPS no valid location yet");
+    Serial.println("! GPS no valid location, using default location");
+    Serial.printf("  Default: %.6f, %.6f\n", DEFAULT_LATITUDE, DEFAULT_LONGITUDE);
 #endif
-    return false;
+    // Usar ubicación por defecto cuando el GPS falla
+    latitude = DEFAULT_LATITUDE;
+    longitude = DEFAULT_LONGITUDE;
+    return true; // Retorna true porque usamos ubicación por defecto
   }
 };
 

@@ -201,14 +201,18 @@ void loop() {
     return;
   }
 
-  // Leer GPS
-  if (!gps_reader->read(m.latitude, m.longitude)) {
-#if ENABLE_DEBUG_SERIAL
-    Serial.println("! GPS not available, using last known location");
-#endif
-    m.gps_valid = false;
-  } else {
+  // Leer GPS (siempre obtiene ubicación, por defecto o válida)
+  if (gps_reader->read(m.latitude, m.longitude)) {
     m.gps_valid = true;
+#if ENABLE_DEBUG_SERIAL
+    Serial.printf("✓ Location obtained: %.6f, %.6f\n", m.latitude, m.longitude);
+#endif
+  } else {
+    // Esto no debería ocurrir con la nueva lógica que siempre usa ubicación por defecto
+    m.gps_valid = false;
+#if ENABLE_DEBUG_SERIAL
+    Serial.println("! GPS reader failed");
+#endif
   }
 
   // Generar recomendación

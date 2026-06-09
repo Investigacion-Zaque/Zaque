@@ -64,6 +64,10 @@
 #define GPIO_TX_GPS 12              // TX del GPS
 #define GPIO_RX_GPS 13              // RX del GPS
 
+// Ubicación por defecto (si el GPS falla)
+#define DEFAULT_LATITUDE 4.663198720911477f
+#define DEFAULT_LONGITUDE -74.05499259771824f
+
 // ============================================================================
 // PINES - TARJETA microSD (SPI)
 // ============================================================================

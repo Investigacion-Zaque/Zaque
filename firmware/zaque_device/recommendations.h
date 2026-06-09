@@ -20,5 +20,4 @@ namespace RecommendationThresholds {
   constexpr float PH_HIGH = 7.5f;
   constexpr int CONDUCTIVITY_HIGH = 2000;
   constexpr int NPK_LOW = 30;
-  constexpr uint8_t BATTERY_LOW = 20;
 }
