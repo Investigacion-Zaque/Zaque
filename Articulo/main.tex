@@ -1,4 +1,6 @@
+```latex
 \documentclass[journal]{IEEEtran}
+
 \usepackage{graphicx}
 \usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
@@ -7,22 +9,36 @@
 \usepackage{color}
 \usepackage{cite}
 
+% Paquetes para tablas ajustables
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{makecell}
+\usepackage{url}
+
+% Permite mejor corte de URLs y textos largos
+\Urlmuskip=0mu plus 1mu
+
+% Configuración para código y texto técnico
 \lstset{
   language=C++,
-  basicstyle=\ttfamily\small,
+  basicstyle=\ttfamily\scriptsize,
   keywordstyle=\color{blue},
   commentstyle=\color{gray},
   stringstyle=\color{red},
   breaklines=true,
-  columns=fullflexible
+  breakatwhitespace=false,
+  columns=fullflexible,
+  keepspaces=true,
+  showstringspaces=false
 }
 
 \title{ZAQUE: Sistema Distribuido de Monitoreo Agrícola Local para Zonas Rurales sin Conectividad a Internet}
 
 \author{
 Alejandro Roa Aparicio, Laura Sofía Holguín Giraldo, Andrés Felipe Guarnizo Saavedra\\
-Universidad XXXX, Colombia
+Universidad EAN, Colombia
 }
+
 \date{Junio 2026}
 
 \begin{document}
@@ -30,16 +46,14 @@ Universidad XXXX, Colombia
 \maketitle
 
 \begin{abstract}
-
-La agricultura de precisión ha revolucionado la producción agrícola mediante la incorporación de tecnologías IoT. Sin embargo, gran parte de las soluciones disponibles dependen de conectividad permanente a Internet y servicios en la nube, limitando su implementación en zonas rurales donde la infraestructura de telecomunicaciones es insuficiente. Este artículo presenta ZAQUE, un sistema distribuido de monitoreo agrícola local diseñado específicamente para operar en entornos con conectividad limitada. La arquitectura propuesta integra una red de nodos ESP32, uno configurado como estación principal (MAIN) y múltiples nodos sensores (SENSOR), comunicados mediante WiFi local. Cada nodo incorpora sensores Modbus RS485 para medición multiparamétrica del suelo, módulos GPS para georreferenciación, y almacenamiento local en microSD para garantizar persistencia de datos. El nodo MAIN expone un dashboard web embebido accesible desde dispositivos móviles sin requerir acceso a Internet. El sistema incluye un motor de recomendaciones agrícolas basado en reglas que genera alertas útiles en lenguaje natural para el campesino. Los resultados demuestran la viabilidad de una solución de bajo costo (~USD 100 por nodo) capaz de apoyar agricultura de precisión en comunidades rurales con conectividad limitada.
-
+La agricultura de precisión ha revolucionado la producción agrícola mediante la incorporación de tecnologías IoT. Sin embargo, gran parte de las soluciones disponibles dependen de conectividad permanente a Internet y servicios en la nube, limitando su implementación en zonas rurales donde la infraestructura de telecomunicaciones es insuficiente. Este artículo presenta ZAQUE, un sistema distribuido de monitoreo agrícola local diseñado específicamente para operar en entornos con conectividad limitada. La arquitectura propuesta integra una red de nodos ESP32, uno configurado como estación principal (MAIN) y múltiples nodos sensores (SENSOR), comunicados mediante WiFi local. Cada nodo incorpora sensores Modbus RS485 para medición multiparamétrica del suelo, módulos GPS para georreferenciación, y almacenamiento local en microSD para garantizar persistencia de datos. El nodo MAIN expone un dashboard web embebido accesible desde dispositivos móviles sin requerir acceso a Internet. El sistema incluye un motor de recomendaciones agrícolas basado en reglas que genera alertas útiles en lenguaje natural para el campesino. Los resultados demuestran la viabilidad de una solución de bajo costo aproximado de USD 100 por nodo capaz de apoyar agricultura de precisión en comunidades rurales con conectividad limitada.
 \end{abstract}
 
 \section{Introducción}
 
 La agricultura moderna enfrenta desafíos crecientes: aumento de población global, limitaciones de agua dulce, degradación de suelos y presión por mejorar rendimientos. En este contexto, la agricultura de precisión emerge como estrategia tecnológica fundamental que permite monitorear variables ambientales a nivel microlocal para optimizar recursos naturales.
 
-El Internet de las Cosas (IoT) ha democratizado el acceso a sensores de bajo costo capaces de recopilar datos ambientales. Sin embargo, la mayoría de soluciones IoT comerciales (Agritech, Plantwise, Arable) dependen de plataformas en la nube, requiriendo conectividad permanente a Internet. En Colombia, según el Ministerio de TIC, aproximadamente 30\% de la población rural carece de acceso a conectividad confiable, limitando la adopción de estas tecnologías.
+El Internet de las Cosas (IoT) ha democratizado el acceso a sensores de bajo costo capaces de recopilar datos ambientales. Sin embargo, la mayoría de soluciones IoT comerciales dependen de plataformas en la nube, requiriendo conectividad permanente a Internet. En Colombia, la conectividad rural continúa siendo una barrera para la adopción de tecnologías digitales en el campo.
 
 ZAQUE surge como respuesta a esta brecha: un sistema de monitoreo agrícola que funciona completamente offline en redes WiFi locales, permitiendo que un campesino use la zona móvil de su celular para conectar múltiples sensores distribuidos en su finca y visualizar toda la información desde un navegador web en su dispositivo móvil.
 
@@ -47,14 +61,14 @@ ZAQUE surge como respuesta a esta brecha: un sistema de monitoreo agrícola que 
 
 \subsection{Visión General}
 
-ZAQUE implementa una arquitectura distribuida multinodo con dos roles diferenciados ejecutados en hardware idéntico (ESP32):
+ZAQUE implementa una arquitectura distribuida multinodo con dos roles diferenciados ejecutados en hardware idéntico, basado en ESP32:
 
 \begin{itemize}
-\item \textbf{Nodo MAIN}: Estación central que actúa como servidor web, procesador de datos y almacenamiento principal. Ejecuta permanentemente un servidor HTTP local accesible en \texttt{http://zaque.local}.
+\item \textbf{Nodo MAIN}: Estación central que actúa como servidor web, procesador de datos y almacenamiento principal. Ejecuta permanentemente un servidor HTTP local accesible desde el navegador.
 \item \textbf{Nodos SENSOR}: Dispositivos distribuidos en el terreno agrícola que ejecutan ciclos de medición periódica, envían datos al MAIN mediante HTTP POST, y entran en deep sleep para conservar energía.
 \end{itemize}
 
-La comunicación entre nodos ocurre a través de una red WiFi local, típicamente la zona móvil del celular del campesino (hotspot), eliminando la dependencia de infraestructura externa.
+La comunicación entre nodos ocurre a través de una red WiFi local, típicamente la zona móvil del celular del campesino, eliminando la dependencia de infraestructura externa.
 
 \subsection{Componentes Principales}
 
@@ -63,7 +77,7 @@ La comunicación entre nodos ocurre a través de una red WiFi local, típicament
 El nodo MAIN implementa las siguientes responsabilidades:
 
 \begin{enumerate}
-\item \textbf{Adquisición de datos}: Lectura local de sensores Modbus RS485, GPS, y batería.
+\item \textbf{Adquisición de datos}: Lectura local de sensores Modbus RS485, GPS y batería.
 \item \textbf{Servidor web embebido}: Hosting de un dashboard HTML/CSS/JS directamente en el ESP32.
 \item \textbf{API REST local}: Endpoints HTTP para recibir mediciones de nodos SENSOR.
 \item \textbf{Almacenamiento persistente}: Registro de mediciones en microSD en formato CSV y JSON.
@@ -77,13 +91,13 @@ Los nodos SENSOR ejecutan un ciclo repetitivo de bajo consumo:
 
 \begin{enumerate}
 \item \textbf{Despertar periódico}: Por defecto cada 30 minutos.
-\item \textbf{Lectura de sensores}: Adquisición de mediciones Modbus en ~5 segundos.
+\item \textbf{Lectura de sensores}: Adquisición de mediciones Modbus en aproximadamente 5 segundos.
 \item \textbf{Lectura GPS}: Obtención de coordenadas o ubicación por defecto.
-\item \textbf{Envío HTTP}: Transmisión de medición al MAIN en ~2 segundos.
-\item \textbf{Deep sleep}: Entrada a modo de bajo consumo (~0.5 mA).
+\item \textbf{Envío HTTP}: Transmisión de medición al MAIN en aproximadamente 2 segundos.
+\item \textbf{Deep sleep}: Entrada a modo de bajo consumo.
 \end{enumerate}
 
-Este ciclo permite autonomía de 1-3 meses con batería estándar de 2000 mAh.
+Este ciclo permite una autonomía extendida en los nodos sensores, dependiendo de la capacidad de batería, el intervalo de medición y el consumo real del hardware.
 
 \section{Especificación de Hardware}
 
@@ -92,60 +106,70 @@ Este ciclo permite autonomía de 1-3 meses con batería estándar de 2000 mAh.
 Se utiliza la plataforma ESP32 DevKit debido a:
 
 \begin{itemize}
-\item WiFi 802.11b/g/n integrado
-\item Arquitectura dual-core a 240 MHz
-\item 4 MB Flash + 520 KB RAM
-\item 36 GPIO configurables
-\item Soporte nativo para deep sleep y RTC
-\item Costo accesible (~USD 15)
+\item WiFi 802.11b/g/n integrado.
+\item Arquitectura dual-core a 240 MHz.
+\item 4 MB Flash y 520 KB RAM.
+\item GPIO configurables.
+\item Soporte nativo para deep sleep y RTC.
+\item Costo accesible.
 \end{itemize}
 
 \subsection{Sensores}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|c|c|c|c|}
+\caption{Componentes principales del nodo ZAQUE}
+\label{tab:sensores}
+\scriptsize
+\begin{tabularx}{\columnwidth}{|>{\raggedright\arraybackslash}X|
+                                  >{\raggedright\arraybackslash}X|
+                                  >{\raggedright\arraybackslash}X|
+                                  c|}
 \hline
 \textbf{Componente} & \textbf{Especificación} & \textbf{Variable} & \textbf{Costo} \\
 \hline
-Sensor Multiparamétrico & RS485 Modbus & Humedad, T, pH, NPK & ~USD 50 \\
+Sensor multiparamétrico & RS485 Modbus & Humedad, temperatura, pH, NPK & \makecell{USD\\50} \\
 \hline
-Módulo GPS & NEO-6M (9600 bps) & Lat/Lon & ~USD 12 \\
+Módulo GPS & NEO-6M, 9600 bps & Latitud / longitud & \makecell{USD\\12} \\
 \hline
-Tarjeta microSD & 32GB FAT32 & Almacenamiento & ~USD 8 \\
+Tarjeta microSD & 32 GB FAT32 & Almacenamiento local & \makecell{USD\\8} \\
 \hline
-Batería Li-Ion & 3.7V 2000mAh+BMS & Autonomía & ~USD 10 \\
+Batería Li-Ion & 3.7 V, 2000 mAh + BMS & Autonomía energética & \makecell{USD\\10} \\
 \hline
-Regulador DC-DC & 5V $\rightarrow$ 3.3V & Alimentación & ~USD 3 \\
+Regulador DC-DC & 5 V a 3.3 V & Alimentación del sistema & \makecell{USD\\3} \\
 \hline
-\textbf{TOTAL} & \textbf{---} & \textbf{---} & \textbf{~USD 100} \\
+\textbf{Total} & --- & --- & \makecell{\textbf{USD}\\\textbf{100}} \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \subsection{Asignación de Pines}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|c|c|c|}
+\caption{Asignación de pines del ESP32}
+\label{tab:pines}
+\scriptsize
+\begin{tabularx}{\columnwidth}{|>{\raggedright\arraybackslash}X|
+                                  >{\raggedright\arraybackslash}X|
+                                  >{\raggedright\arraybackslash}X|}
 \hline
 \textbf{Función} & \textbf{GPIO} & \textbf{Protocolo} \\
 \hline
-ADC Batería & GPIO 0 & ADC \\
+ADC batería & GPIO 0 & ADC \\
 \hline
-Control de Potencia & GPIO 2, 4 & Digital \\
+Control de potencia & GPIO 2, GPIO 4 & Digital \\
 \hline
-UART2 RS485 & GPIO 16 (RX), 17 (TX) & UART2 \\
+UART2 RS485 & GPIO 16 RX, GPIO 17 TX & UART2 \\
 \hline
-UART1 GPS & GPIO 13 (RX), 12 (TX) & UART1 \\
+UART1 GPS & GPIO 13 RX, GPIO 12 TX & UART1 \\
 \hline
-SPI microSD & GPIO 5 (CS), 23 (SCK) & SPI \\
-& GPIO 18 (MOSI), 19 (MISO) & \\
+SPI microSD & GPIO 5 CS, GPIO 23 SCK, GPIO 18 MOSI, GPIO 19 MISO & SPI \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
-\textbf{Nota importante}: GPIO 13 es compartido entre GPS (UART1) y SPI (SCK). La solución implementada utiliza multiplexación por software: GPS se inicializa solo durante el setup, permitiendo que SPI funcione después.
+\textbf{Nota importante}: GPIO 13 puede entrar en conflicto si se comparte entre GPS y SPI. La solución implementada utiliza una asignación de pines separada o una inicialización controlada por software para evitar conflictos durante el uso de periféricos.
 
 \section{Variables Monitoreadas}
 
@@ -153,31 +177,37 @@ El sistema captura las siguientes variables agrícolas:
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|c|c|c|c|}
+\caption{Variables monitoreadas por el sistema}
+\label{tab:variables}
+\scriptsize
+\begin{tabularx}{\columnwidth}{|>{\raggedright\arraybackslash}X|
+                                  c|
+                                  c|
+                                  >{\raggedright\arraybackslash}X|}
 \hline
 \textbf{Variable} & \textbf{Unidad} & \textbf{Rango} & \textbf{Sensor} \\
 \hline
-Humedad del suelo & \% & 0-100 & RS485 Modbus \\
+Humedad del suelo & \% & 0--100 & RS485 Modbus \\
 \hline
-Temperatura & °C & -10 a +60 & RS485 Modbus \\
+Temperatura & $^\circ$C & -10 a 60 & RS485 Modbus \\
 \hline
-Conductividad eléctrica & mS/cm & 0-10 & RS485 Modbus \\
+Conductividad eléctrica & mS/cm & 0--10 & RS485 Modbus \\
 \hline
-pH & pH & 3.0-9.0 & RS485 Modbus \\
+pH & pH & 3.0--9.0 & RS485 Modbus \\
 \hline
-Nitrógeno (N) & mg/kg & 0-999 & RS485 Modbus \\
+Nitrógeno (N) & mg/kg & 0--999 & RS485 Modbus \\
 \hline
-Fósforo (P) & mg/kg & 0-999 & RS485 Modbus \\
+Fósforo (P) & mg/kg & 0--999 & RS485 Modbus \\
 \hline
-Potasio (K) & mg/kg & 0-999 & RS485 Modbus \\
+Potasio (K) & mg/kg & 0--999 & RS485 Modbus \\
 \hline
 Ubicación & lat/lon & --- & GPS NEO-6M \\
 \hline
-Batería & \% & 0-100 & ADC ESP32 \\
+Batería & \% & 0--100 & ADC ESP32 \\
 \hline
 Timestamp & ms & --- & RTC \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \section{Protocolo de Comunicación}
@@ -215,10 +245,10 @@ Las mediciones se almacenan en microSD en dos formatos:
 
 Archivo \texttt{/measurements.csv} con estructura de tabla para análisis histórico:
 
-\begin{verbatim}
-timestamp,node_id,node_name,lat,lon,soil_temperature,...
-1715609400,zona_2,Lote de maiz,4.6632,-74.0550,22.5,...
-\end{verbatim}
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+timestamp,node_id,node_name,lat,lon,soil_temperature,soil_humidity,ph,nitrogen,phosphorus,potassium,battery_percent
+1715609400,zona_2,Lote de maiz,4.6632,-74.0550,22.5,64.0,6.2,34,18,41,83
+\end{lstlisting}
 
 \subsubsection{Formato JSON}
 
@@ -235,7 +265,7 @@ Archivo \texttt{/latest.json} con última medición de cada nodo para dashboard:
       "ph": 6.2,
       "nitrogen": 34,
       "last_seen": "1715609400",
-      "recommendation": "✅ Condiciones óptimas: ..."
+      "recommendation": "Condiciones optimas del suelo."
     }
   ]
 }
@@ -245,7 +275,7 @@ Archivo \texttt{/latest.json} con última medición de cada nodo para dashboard:
 
 \subsection{Arquitectura del Motor}
 
-El sistema implementa un motor de recomendaciones basado en reglas (rule-based) que analiza mediciones y genera alertas en lenguaje natural útiles para el campesino.
+El sistema implementa un motor de recomendaciones basado en reglas que analiza mediciones y genera alertas en lenguaje natural útiles para el campesino.
 
 El motor sigue una jerarquía de prioridades:
 
@@ -263,36 +293,44 @@ El motor sigue una jerarquía de prioridades:
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|l|l|}
+\caption{Alertas críticas del sistema}
+\label{tab:alertas}
+\scriptsize
+\begin{tabularx}{\columnwidth}{|>{\raggedright\arraybackslash}X|
+                                  >{\raggedright\arraybackslash}X|}
 \hline
 \textbf{Condición} & \textbf{Alerta} \\
 \hline
-Humedad < 25\% & Estrés hídrico severo \\
+Humedad menor a 25\% & Estrés hídrico severo \\
 \hline
-Humedad > 85\% & Riesgo de encharcamiento \\
+Humedad mayor a 85\% & Riesgo de encharcamiento \\
 \hline
-CE > 4.0 mS/cm & Exceso de sales \\
+CE mayor a 4.0 mS/cm & Exceso de sales \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \subsubsection{Combinaciones Críticas}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|l|l|}
+\caption{Combinaciones críticas consideradas por el motor}
+\label{tab:combinaciones}
+\scriptsize
+\begin{tabularx}{\columnwidth}{|>{\raggedright\arraybackslash}X|
+                                  >{\raggedright\arraybackslash}X|}
 \hline
 \textbf{Combinación} & \textbf{Recomendación} \\
 \hline
-Humedad < 40\% AND T > 28°C & Estrés hídrico + calor \\
+Humedad menor a 40\% y temperatura mayor a 28 $^\circ$C & Estrés hídrico más calor \\
 \hline
-pH < 5.5 AND P < 15 mg/kg & Bloqueo nutricional \\
+pH menor a 5.5 y fósforo menor a 15 mg/kg & Bloqueo nutricional \\
 \hline
-Humedad > 70\% AND CE > 2.0 & Acumulación de sales \\
+Humedad mayor a 70\% y CE mayor a 2.0 mS/cm & Acumulación de sales \\
 \hline
-pH > 7.5 AND (N/P/K bajo) & Bloqueo por alcalinidad \\
+pH mayor a 7.5 y NPK bajo & Bloqueo por alcalinidad \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \subsubsection{Recomendaciones Individuales}
@@ -301,7 +339,7 @@ Para cada variable, el motor genera texto adaptado:
 
 \begin{itemize}
 \item \textbf{Humedad}: Incluye valor actual y recomendación de riego.
-\item \textbf{pH}: Describe acidez/alcalinidad y sugiere correcciones.
+\item \textbf{pH}: Describe acidez o alcalinidad y sugiere correcciones.
 \item \textbf{NPK}: Valora deficiencias y recomienda fertilización.
 \item \textbf{CE}: Alerta sobre salinidad acumulada.
 \item \textbf{Temperatura}: Advierte sobre estrés térmico.
@@ -310,39 +348,43 @@ Para cada variable, el motor genera texto adaptado:
 \subsection{Ejemplo de Generación de Alerta}
 
 Medición:
-\begin{verbatim}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
 humidity: 35%, temperature: 28°C, pH: 6.2, N: 25
-\end{verbatim}
+\end{lstlisting}
 
 Análisis:
-- Humedad < 40\% ✓
-- Temperatura > 28°C ✓
-- Combinación presente
+
+\begin{itemize}
+\item Humedad menor a 40\%.
+\item Temperatura igual o mayor a 28 $^\circ$C.
+\item Combinación crítica presente.
+\end{itemize}
 
 Alerta generada:
-\begin{verbatim}
-"🟠 ESTRÉS HÍDRICO: Humedad 35% + temperatura 28°C 
- alta. Revise riego urgentemente."
-\end{verbatim}
+
+\begin{lstlisting}[basicstyle=\ttfamily\scriptsize,breaklines=true]
+"ESTRES HIDRICO: Humedad 35% + temperatura 28°C alta. Revise riego urgentemente."
+\end{lstlisting}
 
 \section{Estructura del Firmware}
 
 \subsection{Modularización}
 
-El firmware zaque\_device.ino se divide en componentes con interfaces bien definidas:
+El firmware \texttt{zaque\_device.ino} se divide en componentes con interfaces bien definidas:
 
 \begin{enumerate}
-\item \textbf{config.h}: Configuración centralizada (roles, pines, WiFi, valores por defecto).
-\item \textbf{types.h}: Estructuras de datos (\texttt{Measurement}) e interfaces virtuales.
+\item \textbf{config.h}: Configuración centralizada de roles, pines, WiFi y valores por defecto.
+\item \textbf{types.h}: Estructuras de datos e interfaces virtuales.
 \item \textbf{sensor\_reader.cpp}: Lectura del sensor Modbus RS485.
 \item \textbf{gps\_reader.cpp}: Lectura GPS con fallback automático.
 \item \textbf{sd\_logger.cpp}: Almacenamiento en microSD.
 \item \textbf{wifi\_manager.cpp}: Gestión de conexión WiFi.
 \item \textbf{http\_client.cpp}: Cliente HTTP para nodos SENSOR.
 \item \textbf{web\_server.cpp}: Servidor web para nodo MAIN.
-\item \textbf{node\_registry.cpp}: Registro de nodos (MAIN).
+\item \textbf{node\_registry.cpp}: Registro de nodos en el MAIN.
 \item \textbf{recommendations.cpp}: Motor de recomendaciones.
-\item \textbf{dashboard\_html.h}: HTML/CSS/JS embebido.
+\item \textbf{dashboard\_html.h}: HTML, CSS y JavaScript embebido.
 \end{enumerate}
 
 \subsection{Compilación Condicional por Rol}
@@ -350,24 +392,24 @@ El firmware zaque\_device.ino se divide en componentes con interfaces bien defin
 En \texttt{config.h}:
 
 \begin{lstlisting}
-#define DEVICE_ROLE DEVICE_ROLE_MAIN    // o DEVICE_ROLE_SENSOR
+#define DEVICE_ROLE DEVICE_ROLE_MAIN
 \end{lstlisting}
 
-El compilador incluye/excluye código según el rol:
+El compilador incluye o excluye código según el rol:
 
 \begin{lstlisting}
 #if DEVICE_ROLE == DEVICE_ROLE_MAIN
-  // Código solo para MAIN
+  // Codigo solo para MAIN
 #endif
 \end{lstlisting}
 
-Esto permite compartir 90\% del código entre ambos roles.
+Esto permite compartir gran parte del código entre ambos roles.
 
 \section{Manejo de Errores y Resiliencia}
 
 \subsection{GPS Fallback}
 
-Si el GPS no obtiene señal después de 1 segundo, el sistema automáticamente usa la ubicación por defecto definida en config.h:
+Si el GPS no obtiene señal después de un tiempo determinado, el sistema automáticamente usa la ubicación por defecto definida en \texttt{config.h}:
 
 \begin{lstlisting}
 #define DEFAULT_LATITUDE 4.663198720911477f
@@ -381,10 +423,10 @@ Este mecanismo garantiza que las mediciones nunca se pierden por falta de GPS.
 El logger de SD implementa validaciones:
 
 \begin{enumerate}
-\item Verifica que la tarjeta está correctamente inicializada.
-\item Crea archivos con encabezados CSV solo en primera escritura.
-\item Valida serialización JSON con verificación de bytes escritos.
-\item Registra errores en serial para debugging.
+\item Verifica que la tarjeta esté correctamente inicializada.
+\item Crea archivos con encabezados CSV solo en la primera escritura.
+\item Valida la serialización JSON con verificación de bytes escritos.
+\item Registra errores en serial para depuración.
 \end{enumerate}
 
 \subsection{Reintentos HTTP}
@@ -403,58 +445,72 @@ Si el MAIN no responde, la medición se almacena localmente para envío posterio
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|c|c|c|}
+\caption{Consumo estimado del nodo SENSOR}
+\label{tab:consumo_sensor}
+\scriptsize
+\begin{tabularx}{\columnwidth}{|>{\raggedright\arraybackslash}X|
+                                  c|
+                                  c|}
 \hline
 \textbf{Estado} & \textbf{Consumo} & \textbf{Duración} \\
 \hline
-Despertar + Inicialización & 150 mA & 3 seg \\
+Despertar e inicialización & 150 mA & 3 s \\
 \hline
-Lectura de sensor & 80 mA & 2 seg \\
+Lectura de sensor & 80 mA & 2 s \\
 \hline
-Lectura GPS & 100 mA & 1 seg \\
+Lectura GPS & 100 mA & 1 s \\
 \hline
-Envío HTTP & 120 mA & 2 seg \\
+Envío HTTP & 120 mA & 2 s \\
 \hline
-Deep sleep & 0.5 mA & 30 min - 8 seg \\
+Deep sleep & 0.5 mA & 30 min - 8 s \\
 \hline
-\end{tabular}
+\end{tabularx}
 \end{table}
 
-Consumo promedio por ciclo (30 min):
+Consumo promedio por ciclo de 30 minutos:
+
 \begin{itemize}
-\item Ciclo activo: ~70 mA durante 8 segundos
-\item Ciclo dormido: ~0.5 mA durante 29 min 52 seg
-\item Promedio: $\frac{70 \times 8 + 0.5 \times 1792}{1800} \approx 0.35$ mA
+\item Ciclo activo: aproximadamente 70 mA durante 8 segundos.
+\item Ciclo dormido: aproximadamente 0.5 mA durante 1792 segundos.
+\item Promedio aproximado:
 \end{itemize}
 
-Con batería de 2000 mAh: $\frac{2000}{0.35} \approx 5700$ horas $\approx 237$ días $\approx$ 7.8 meses.
+\begin{equation}
+I_{prom} = \frac{70 \times 8 + 0.5 \times 1792}{1800} \approx 0.81 \text{ mA}
+\end{equation}
+
+Con batería de 2000 mAh:
+
+\begin{equation}
+Autonomia = \frac{2000}{0.81} \approx 2469 \text{ horas} \approx 102 \text{ dias}
+\end{equation}
 
 \subsection{Nodo MAIN}
 
 \begin{itemize}
-\item WiFi siempre activo: ~80 mA
-\item Servidor web activo: ~50 mA
-\item Lectura de sensores periódica: ~20 mA promedio
-\item Consumo total: ~150 mA promedio
+\item WiFi siempre activo: aproximadamente 80 mA.
+\item Servidor web activo: aproximadamente 50 mA.
+\item Lectura de sensores periódica: aproximadamente 20 mA promedio.
+\item Consumo total: aproximadamente 150 mA promedio.
 \end{itemize}
 
-El nodo MAIN debe estar conectado a alimentación permanente (AC, solar, o batería grande con carga).
+El nodo MAIN debe estar conectado a alimentación permanente, como adaptador AC, sistema solar o batería de mayor capacidad con carga.
 
 \section{Seguridad}
 
-\subsection{MVP (Actual)}
+\subsection{MVP Actual}
 
 \begin{itemize}
-\item \textbf{API Key}: Simple header hardcodeado en config.h.
-\item \textbf{Red}: WiFi local no requiere HTTPS.
+\item \textbf{API Key}: Header simple configurado en \texttt{config.h}.
+\item \textbf{Red}: WiFi local sin dependencia de Internet.
 \item \textbf{Validación}: Verificación JSON básica de campos requeridos.
-\item \textbf{Autenticación}: Ninguna (red local confiable).
+\item \textbf{Autenticación}: Limitada al entorno de red local.
 \end{itemize}
 
 \subsection{Recomendaciones Futuras}
 
 \begin{enumerate}
-\item Implementar JWT tokens para autenticación de nodos.
+\item Implementar JWT para autenticación de nodos.
 \item Añadir HTTPS cuando haya conectividad a Internet.
 \item Encriptación de datos sensibles en microSD.
 \item Control de acceso por rol en dashboard web.
@@ -465,28 +521,28 @@ El nodo MAIN debe estar conectado a alimentación permanente (AC, solar, o bater
 
 \begin{enumerate}
 \item \textbf{Operación sin Internet}: Funciona completamente offline en red WiFi local.
-\item \textbf{Bajo costo}: ~USD 100 por nodo completo.
-\item \textbf{Escalabilidad}: Soporte teórico ilimitado de nodos, limitado por rango WiFi.
-\item \textbf{Almacenamiento seguro}: Datos persisten localmente en microSD.
-\item \textbf{Facilidad de despliegue}: Hardware y software listos para usar.
+\item \textbf{Bajo costo}: Aproximadamente USD 100 por nodo completo.
+\item \textbf{Escalabilidad}: Soporte de múltiples nodos, limitado principalmente por rango WiFi.
+\item \textbf{Almacenamiento seguro}: Datos persistentes localmente en microSD.
+\item \textbf{Facilidad de despliegue}: Hardware y software listos para uso en campo.
 \item \textbf{Independencia tecnológica}: No depende de proveedores de servicios en la nube.
 \item \textbf{Inteligencia local}: Recomendaciones generadas en el dispositivo.
-\item \textbf{Bajo consumo}: Autonomía de 1-3 meses para nodos SENSOR.
+\item \textbf{Bajo consumo}: Autonomía extendida para nodos SENSOR.
 \end{enumerate}
 
 \section{Limitaciones Actuales}
 
 \begin{enumerate}
-\item \textbf{Rango WiFi}: Limitado a ~50-100 metros dependiendo de interferencias.
-\item \textbf{Sincronización}: No hay sincronización de estado entre nodos (cada uno es independiente).
+\item \textbf{Rango WiFi}: Limitado por la distancia, obstáculos e interferencias.
+\item \textbf{Sincronización}: No hay sincronización avanzada de estado entre nodos.
 \item \textbf{Descubrimiento}: El MAIN debe tener dirección fija o mDNS funcionando.
-\item \textbf{Dashboard}: Versión actual es básica (mejoras futuras).
-\item \textbf{Análisis}: Recomendaciones son reglas simples (sin ML/AI aún).
+\item \textbf{Dashboard}: La versión actual es básica y requiere mejoras visuales.
+\item \textbf{Análisis}: Las recomendaciones se basan en reglas simples.
 \end{enumerate}
 
 \section{Trabajo Futuro}
 
-\subsection{Corto Plazo (Próximos 3 meses)}
+\subsection{Corto Plazo}
 
 \begin{enumerate}
 \item Implementación completa de dashboard web con mapas interactivos.
@@ -495,39 +551,39 @@ El nodo MAIN debe estar conectado a alimentación permanente (AC, solar, o bater
 \item Validación exhaustiva con datos reales de campo.
 \end{enumerate}
 
-\subsection{Mediano Plazo (3-6 meses)}
+\subsection{Mediano Plazo}
 
 \begin{enumerate}
-\item Integración con sensores adicionales (temperatura ambiente, humedad relativa, radiación).
-\item Algoritmos predictivos para predicción de riego y fertilización.
+\item Integración con sensores adicionales de temperatura ambiente, humedad relativa y radiación.
+\item Algoritmos predictivos para riego y fertilización.
 \item Análisis de tendencias históricas.
-\item Exportación de datos a formatos estándar (GeoJSON, WFS).
+\item Exportación de datos a formatos estándar como GeoJSON o CSV avanzado.
 \end{enumerate}
 
-\subsection{Largo Plazo (6+ meses)}
+\subsection{Largo Plazo}
 
 \begin{enumerate}
 \item Sincronización opcional con servicios en la nube.
 \item Machine Learning para recomendaciones personalizadas por cultivo.
-\item Integración con sistemas SARA (Sistema de Alerta de Riesgo Agrícola).
-\item Modelo de negocio para escala (SaaS, licencias, servicios).
+\item Integración con sistemas de alerta agrícola.
+\item Modelo de negocio para escalamiento mediante servicios, licencias o soporte técnico.
 \end{enumerate}
 
 \section{Conclusiones}
 
-ZAQUE demuestra la viabilidad de un sistema de monitoreo agrícola local, distribuido y de bajo costo para comunidades rurales con conectividad limitada. La arquitectura basada en ESP32 permite capturar variables críticas del suelo (humedad, pH, NPK), almacenarlas localmente, y proporcionar recomendaciones agrícolas inteligentes sin depender de infraestructura externa.
+ZAQUE demuestra la viabilidad de un sistema de monitoreo agrícola local, distribuido y de bajo costo para comunidades rurales con conectividad limitada. La arquitectura basada en ESP32 permite capturar variables críticas del suelo, almacenarlas localmente y proporcionar recomendaciones agrícolas sin depender de infraestructura externa.
 
 Las principales contribuciones de este trabajo son:
 
 \begin{enumerate}
-\item Arquitectura modular y escalable ejecutable en hardware de ~USD 100.
-\item Motor de recomendaciones basado en reglas agrícolas validadas.
-\item Mecanismos de resiliencia (GPS fallback, reintentos HTTP, SD redundante).
+\item Arquitectura modular y escalable ejecutable en hardware de bajo costo.
+\item Motor de recomendaciones basado en reglas agrícolas.
+\item Mecanismos de resiliencia como GPS fallback, reintentos HTTP y almacenamiento local.
 \item Consumo energético optimizado para autonomía extendida.
-\item Documentación completa y código de software libre.
+\item Documentación completa y código orientado a software libre.
 \end{enumerate}
 
-Este enfoque offline-first responde a la realidad de zonas rurales en desarrollo, permitiendo que tecnologías de agricultura de precisión sean accesibles sin requerir infraestructura de telecomunicaciones robusta. Se espera que ZAQUE sea una herramienta útil para pequeños y medianos agricultores, extensionistas rurales, y investigadores agrícolas en entornos con limitaciones de conectividad.
+Este enfoque offline-first responde a la realidad de zonas rurales en desarrollo, permitiendo que tecnologías de agricultura de precisión sean accesibles sin requerir infraestructura de telecomunicaciones robusta. Se espera que ZAQUE sea una herramienta útil para pequeños y medianos agricultores, extensionistas rurales e investigadores agrícolas en entornos con limitaciones de conectividad.
 
 \section*{Agradecimientos}
 
@@ -535,20 +591,28 @@ Los autores agradecen a las comunidades campesinas de Colombia que inspiraron es
 
 \begin{thebibliography}{1}
 
-\bibitem{precisionAg} R. F. Reid, D. B. Lobell, "Suitability of high-definition imagery and lidar data for precision agriculture in the tropics," \textit{Remote Sensing of Environment}, vol. 205, pp. 145-157, 2018.
+\bibitem{precisionAg}
+R. F. Reid and D. B. Lobell, ``Suitability of high-definition imagery and lidar data for precision agriculture in the tropics,'' \textit{Remote Sensing of Environment}, vol. 205, pp. 145--157, 2018.
 
-\bibitem{IoT} L. Atzori, A. Iera, G. Morabito, "The Internet of Things: A survey," \textit{Computer Networks}, vol. 54, no. 15, pp. 2787-2805, 2010.
+\bibitem{IoT}
+L. Atzori, A. Iera, and G. Morabito, ``The Internet of Things: A survey,'' \textit{Computer Networks}, vol. 54, no. 15, pp. 2787--2805, 2010.
 
-\bibitem{SoilSensors} D. A. Robinson, et al., "Soil moisture measurement for ecological and hydrological watershed-scale monitoring," \textit{Nature Reviews Earth \& Environment}, vol. 2, pp. 578-591, 2021.
+\bibitem{SoilSensors}
+D. A. Robinson et al., ``Soil moisture measurement for ecological and hydrological watershed-scale monitoring,'' \textit{Nature Reviews Earth \& Environment}, vol. 2, pp. 578--591, 2021.
 
-\bibitem{ESP32} Espressif Systems, "ESP32 Technical Reference Manual," \textit{https://www.espressif.com}, 2024.
+\bibitem{ESP32}
+Espressif Systems, ``ESP32 Technical Reference Manual,'' 2024. [Online]. Available: \url{https://www.espressif.com}
 
-\bibitem{Modbus} IEC 61131-3, "Industrial automation systems and integration—Open modbus specification," 2006.
+\bibitem{Modbus}
+Modbus Organization, ``Modbus Application Protocol Specification,'' 2006.
 
-\bibitem{MQTT} A. Banks et al., "MQTT Version 5.0," OASIS Committee Specification, 2019.
+\bibitem{MQTT}
+A. Banks et al., ``MQTT Version 5.0,'' OASIS Standard, 2019.
 
-\bibitem{Colombia2019} Ministerio de Tecnologías de la Información y Comunicaciones, "Plan Vive Digital 2022-2026," Colombia, 2022.
+\bibitem{Colombia2019}
+Ministerio de Tecnologías de la Información y las Comunicaciones, ``Plan Vive Digital y estrategias de conectividad rural,'' Colombia, 2022.
 
 \end{thebibliography}
 
 \end{document}
+```

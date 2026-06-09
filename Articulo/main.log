@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.9.14)  9 JUN 2026 11:43
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023/Debian) (preloaded format=pdflatex 2025.9.14)  9 JUN 2026 11:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -6,7 +6,29 @@ entering extended mode
 (./main.tex
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-01-22>
+
+! LaTeX Error: Missing \begin{document}.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.1 `
+     ``latex
+? 
+Missing character: There is no ` in font nullfont!
+Missing character: There is no ` in font nullfont!
+Missing character: There is no ` in font nullfont!
+Missing character: There is no l in font nullfont!
+Missing character: There is no a in font nullfont!
+Missing character: There is no t in font nullfont!
+Missing character: There is no e in font nullfont!
+Missing character: There is no x in font nullfont!
 (/usr/share/texlive/texmf-dist/tex/latex/ieeetran/IEEEtran.cls
+Overfull \hbox (20.0pt too wide) in paragraph at lines 1--201
+[] 
+ []
+
 Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
 -- See the "IEEEtran_HOWTO" manual for usage information.
 -- http://www.michaelshell.org/tex/ieeetran/
@@ -110,10 +132,13 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24> not available
 \@IEEEquantizemultiple=\count266
 \@IEEEquantizeboxA=\box51
 \@IEEEtmpitemindent=\dimen162
+[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texlive/texmf-
+dist/fonts/enc/dvips/base/8r.enc}]
 \IEEEPARstartletwidth=\dimen163
 \c@IEEEbiography=\count267
 \@IEEEtranrubishbin=\box52
-) (/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
+)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
 Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
 
 (/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty
@@ -342,6 +367,32 @@ LaTeX Info: Redefining \cite on input line 302.
 LaTeX Info: Redefining \nocite on input line 332.
 Package: cite 2015/02/27  v 5.5
 )
+(/usr/share/texlive/texmf-dist/tex/latex/tools/array.sty
+Package: array 2023/10/16 v2.5g Tabular extension package (FMi)
+\col@sep=\dimen175
+\ar@mcellbox=\box55
+\extrarowheight=\dimen176
+\NC@list=\toks23
+\extratabsurround=\skip52
+\backup@length=\skip53
+\ar@cellbox=\box56
+)
+(/usr/share/texlive/texmf-dist/tex/latex/tools/tabularx.sty
+Package: tabularx 2023/07/08 v2.11c `tabularx' package (DPC)
+\TX@col@width=\dimen177
+\TX@old@table=\dimen178
+\TX@old@col=\dimen179
+\TX@target=\dimen180
+\TX@delta=\dimen181
+\TX@cols=\count291
+\TX@ftn=\toks24
+)
+(/usr/share/texlive/texmf-dist/tex/latex/makecell/makecell.sty
+Package: makecell 2009/08/03 V0.1e Managing of Tab Column Heads and Cells
+\rotheadsize=\dimen182
+\c@nlinenum=\count292
+\TeXr@lab=\toks25
+)
 (/usr/share/texlive/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2023/02/27 1.9 listings language file
 )
@@ -353,48 +404,48 @@ File: lstmisc.sty 2023/02/27 1.9 (Carsten Heinz)
 )
 (/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
 File: l3backend-pdftex.def 2024-01-04 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count291
-\l__pdf_internal_box=\box55
+\l__color_backend_stack_int=\count293
+\l__pdf_internal_box=\box57
 )
 (./main.aux
-LaTeX Info: Redefining \. on input line 8.
-LaTeX Info: Redefining \% on input line 8.
+LaTeX Info: Redefining \. on input line 11.
+LaTeX Info: Redefining \% on input line 11.
 )
 \openout1 = `main.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 28.
-LaTeX Font Info:    ... okay on input line 28.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 44.
+LaTeX Font Info:    ... okay on input line 44.
 
 -- Lines per column: 58 (exact).
 (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count292
-\scratchdimen=\dimen175
-\scratchbox=\box56
-\nofMPsegments=\count293
-\nofMParguments=\count294
-\everyMPshowfont=\toks23
-\MPscratchCnt=\count295
-\MPscratchDim=\dimen176
-\MPnumerator=\count296
-\makeMPintoPDFobject=\count297
-\everyMPtoPDFconversion=\toks24
+\scratchcounter=\count294
+\scratchdimen=\dimen183
+\scratchbox=\box58
+\nofMPsegments=\count295
+\nofMParguments=\count296
+\everyMPshowfont=\toks26
+\MPscratchCnt=\count297
+\MPscratchDim=\dimen184
+\MPnumerator=\count298
+\makeMPintoPDFobject=\count299
+\everyMPtoPDFconversion=\toks27
 ) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
@@ -404,295 +455,160 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-LaTeX Info: Redefining \. on input line 28.
-LaTeX Info: Redefining \% on input line 28.
-Package hyperref Info: Link coloring OFF on input line 28.
+LaTeX Info: Redefining \. on input line 44.
+LaTeX Info: Redefining \% on input line 44.
+Package hyperref Info: Link coloring OFF on input line 44.
+
+(./main.out) (./main.out)
 \@outlinefile=\write3
 \openout3 = `main.out'.
 
-\c@lstlisting=\count298
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7> on input line 42.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5> on input line 42.
-
-Underfull \vbox (badness 2556) has occurred while \output is active []
-
-LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 5
-3.
-
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
-File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
-) [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}{/usr/share/texlive/texm
-f-dist/fonts/enc/dvips/base/8r.enc}
+\c@lstlisting=\count300
+ [2
 
 
 ]
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <8> on input line 107.
-LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <6> on input line 107.
 
-Overfull \hbox (58.12648pt too wide) in paragraph at lines 107--124
- [][] 
- []
+LaTeX Warning: `h' float specifier changed to `ht'.
 
-LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 1
-62.
-(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1ptm.fd
-File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
-)
-Overfull \hbox (84.0pt too wide) in paragraph at lines 221--221
-[]\OT1/pcr/m/n/10 timestamp,node_id,node_name,lat,lon,soil_temperature,...[] 
- []
+LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 2
+19.
+(/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1pcr.fd
+File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
+) [3]
 
-
-Overfull \hbox (78.0pt too wide) in paragraph at lines 221--221
-[]\OT1/pcr/m/n/10 1715609400,zona_2,Lote de maiz,4.6632,-74.0550,22.5,...[] 
- []
-
-
-! LaTeX Error: Invalid UTF-8 byte sequence (â\lst@ECœ\lst@EC…).
+! LaTeX Error: Invalid UTF-8 byte sequence (Â\lst@EC°).
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.238       "recommendation": "âœ… 
-                                   Condiciones Ã³ptimas: ..."
+l.353 humidity: 35%, temperature: 28Â°C,
+                                         pH: 6.2, N: 25
 ? 
 
-! LaTeX Error: Invalid UTF-8 byte sequence (Ã\lst@EC³).
+! LaTeX Error: Invalid UTF-8 byte sequence (Â\lst@EC°).
 
 See the LaTeX manual or LaTeX Companion for explanation.
 Type  H <return>  for immediate help.
  ...                                              
                                                   
-l.238 ...commendation": "âœ… Condiciones Ã³ptimas:
-                                                   ..."
+l.367 ...HIDRICO: Humedad 35% + temperatura 28Â°C 
+                                                  alta. Revise riego urgente...
+
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   //
+           Codigo solo para MAIN
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   // 
+           Codigo solo para MAIN
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   // Codigo 
+                  solo para MAIN
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   // Codigo 
+                  solo para MAIN
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   // Codigo solo 
+                       para MAIN
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   // Codigo solo 
+                       para MAIN
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   // Codigo solo para 
+                            MAIN
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   // Codigo solo para 
+                            MAIN
+? 
+
+! LaTeX Error: Undefined color `gray'.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.402   // Codigo solo para MAIN
+                                
 ? 
 
 LaTeX Warning: `h' float specifier changed to `ht'.
 
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-[2]
-LaTeX Font Info:    Trying to load font information for TS1+pcr on input line 3
-15.
- (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ts1pcr.fd
-File: ts1pcr.fd 2001/06/04 font definitions for TS1/pcr.
-)
-Overfull \hbox (36.0pt too wide) in paragraph at lines 315--315
-[]\OT1/pcr/m/n/10 humidity: 35%, temperature: 28\TS1/pcr/m/n/10 °\OT1/pcr/m/n/1
-0 C, pH: 6.2, N: 25[] 
- []
-
-
-! LaTeX Error: Unicode character âœ“ (U+2713)
-               not set up for use with LaTeX.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.318 - Humedad < 40\% âœ“
-                          
+! Undefined control sequence.
+l.479 ...0.5 \times 1792}{1800} \approx 0.81 \text
+                                                  { mA}
 ? 
+! Undefined control sequence.
+l.485 ...ia = \frac{2000}{0.81} \approx 2469 \text
+                                                  { horas} \approx 102 \text...
 
-! LaTeX Error: Unicode character âœ“ (U+2713)
-               not set up for use with LaTeX.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.319 - Temperatura > 28Â°C âœ“
-                               
 ? 
-
-! LaTeX Error: Unicode character ðŸŸ  (U+1F7E0)
-               not set up for use with LaTeX.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.326 \end{verbatim}
-                    
+! Undefined control sequence.
+l.485 ...prox 2469 \text{ horas} \approx 102 \text
+                                                  { dias}
 ? 
-
-Overfull \hbox (36.0pt too wide) in paragraph at lines 326--326
-[]\OT1/pcr/m/n/10 " ESTR[]ES H[]IDRICO: Humedad 35% + temperatura 28\TS1/pcr/m/
-n/10 °\OT1/pcr/m/n/10 C[] 
- []
-
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.353 #define DEVICE_ROLE DEVICE_ROLE_MAIN    //
-                                                 o DEVICE_ROLE_SENSOR
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.353 #define DEVICE_ROLE DEVICE_ROLE_MAIN    // 
-                                                 o DEVICE_ROLE_SENSOR
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.353 ...ine DEVICE_ROLE DEVICE_ROLE_MAIN    // o 
-                                                  DEVICE_ROLE_SENSOR
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.353 ...ine DEVICE_ROLE DEVICE_ROLE_MAIN    // o 
-                                                  DEVICE_ROLE_SENSOR
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.353 ...VICE_ROLE_MAIN    // o DEVICE_ROLE_SENSOR
-                                                  
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   //
-           CÃ³digo solo para MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   //
-           CÃ³digo solo para MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // 
-           CÃ³digo solo para MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // CÃ³digo 
-                   solo para MAIN
-? 
-
-! LaTeX Error: Invalid UTF-8 byte sequence (Ã\lst@EC³).
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // CÃ³digo 
-                   solo para MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // CÃ³digo 
-                   solo para MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // CÃ³digo solo 
-                        para MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // CÃ³digo solo 
-                        para MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // CÃ³digo solo para 
-                             MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // CÃ³digo solo para 
-                             MAIN
-? 
-
-! LaTeX Error: Undefined color `gray'.
-
-See the LaTeX manual or LaTeX Companion for explanation.
-Type  H <return>  for immediate help.
- ...                                              
-                                                  
-l.360   // CÃ³digo solo para MAIN
-                                 
-? 
-[3]
-Underfull \hbox (badness 10000) in paragraph at lines 544--545
-[]\OT1/ptm/m/n/8 Espressif Sys-tems, .[]P32 Tech-ni-cal Re-fe-ren-ce Ma-
- []
-
-[4] [5
+[4] [5]
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 604.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 604.
+ [6
 
 ] (./main.aux
 LaTeX Info: Redefining \. on input line 11.
@@ -712,32 +628,31 @@ Package rerunfilecheck Warning: File `main.out' has changed.
 (rerunfilecheck)                or use package `bookmark'.
 
 Package rerunfilecheck Info: Checksums for `main.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  295F777BE329B6D4C718BEC2A1B19A92;6812.
+(rerunfilecheck)             Before: 295F777BE329B6D4C718BEC2A1B19A92;6812
+(rerunfilecheck)             After:  B145AB53F3940865C67CFFF1D24CBA90;6520.
  ) 
 Here is how much of TeX's memory you used:
- 12852 strings out of 474222
- 201243 string characters out of 5748733
- 2055975 words of memory out of 5000000
- 34802 multiletter control sequences out of 15000+600000
- 596716 words of font info for 102 fonts, out of 8000000 for 9000
+ 13162 strings out of 474222
+ 205239 string characters out of 5748733
+ 2104975 words of memory out of 5000000
+ 35091 multiletter control sequences out of 15000+600000
+ 596441 words of font info for 100 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,9n,79p,1361b,1617s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,15n,79p,1361b,1634s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></us
 r/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb></usr/share
 /texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texliv
-e/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb></usr/share/texlive/texmf-
-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texmf-dist/f
-onts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/ty
-pe1/public/amsfonts/cm/cmsy8.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw
-/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a
-.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/sha
-re/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texm
-f-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on main.pdf (5 pages, 168254 bytes).
+e/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/public/amsfonts/cm/cmsy5.pfb></usr/share/texlive/texmf-dist/
+fonts/type1/public/amsfonts/cm/cmsy7.pfb></usr/share/texlive/texmf-dist/fonts/t
+ype1/urw/courier/ucrr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/time
+s/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb><
+/usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texl
+ive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on main.pdf (6 pages, 166957 bytes).
 PDF statistics:
- 289 PDF objects out of 1000 (max. 8388607)
- 255 compressed objects within 3 object streams
- 169 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 441 PDF objects out of 1000 (max. 8388607)
+ 406 compressed objects within 5 object streams
+ 184 named destinations out of 1000 (max. 500000)
+ 353 words of extra memory for PDF output out of 10000 (max. 10000000)
 

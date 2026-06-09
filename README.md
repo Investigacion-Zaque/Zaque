@@ -1,129 +1,117 @@
-# Zaque 🌾
+# 🌾 Zaque - Monitoreo Agrícola Local Distribuido
 
-**Sistema local de monitoreo agrícola distribuido para comunidades campesinas.**
-
-Zaque es una red de dispositivos ESP32 que miden variables del suelo en múltiples puntos de una finca, almacenan datos localmente en microSD y exponen un dashboard web desde el nodo principal, **sin dependencia de internet**.
-
-El campesino enciende la zona móvil del celular, los ESP32 se conectan a esa red WiFi local, y puede visualizar todas las mediciones desde el navegador del teléfono.
+> **Sistema de monitoreo de suelo para campesinos con IoT, sin dependencia de internet**
 
 ---
 
-## 🎯 Visión
+## 🎯 ¿Qué es Zaque?
 
-Transformar Zaque de una arquitectura basada en **MQTT hacia la nube** a una arquitectura **local, autónoma y tolerante a falta de internet**, priorizando el uso en zonas rurales sin conectividad confiable.
+Zaque es una **red de dispositivos ESP32 que monitorean cultivos** en múltiples puntos de una finca. El campesino enciende la zona móvil del celular, los ESP32 se conectan a esa red local, y puede ver todas las mediciones desde su navegador móvil **sin necesidad de internet**.
 
----
-
-## 🏗️ Arquitectura Nueva
-
-```
-┌──────────────────────────────────────┐
-│  Red WiFi local del celular          │
-└──────────────────────────────────────┘
-          ▲          ▲          ▲
-          │          │          │
-    ┌─────┴────┐ ┌──┴────┐ ┌───┴─────┐
-    │ SENSOR 1 │ │SENSOR 2│ │SENSOR N │
-    │  GPS+SD  │ │ GPS+SD │ │ GPS+SD  │
-    └─────┬────┘ └──┬─────┘ └───┬─────┘
-          │HTTP POST │          │
-          └──────┬───┴──────────┘
-               ▼
-    ┌──────────────────────┐
-    │ MAIN (Web + API)     │
-    │ • Sensor local       │
-    │ • GPS local          │
-    │ • microSD (central)  │
-    │ • Dashboard local    │
-    │ • Recomendaciones    │
-    └──────────┬───────────┘
-          HTTP ▼
-      ┌─────────────────┐
-      │ Celular         │
-      │ Navegador web   │
-      └─────────────────┘
-```
-
-**Componentes**:
-- **1 nodo MAIN**: Punto central, servidor web, almacenamiento
-- **N nodos SENSOR**: Puntos distribuidos, envían datos al MAIN
-- **Mismo hardware para todos**: Diferencia solo en firmware/configuración
-- **Red WiFi local**: Creada por el celular (hotspot)
-- **Almacenamiento local**: Todos los datos en microSD
-- **Dashboard embebido**: Página web servida desde el MAIN
+| Característica | Ventaja |
+|---|---|
+| 📡 **WiFi Local** | Sin necesidad de internet |
+| 💾 **Almacenamiento Local** | Datos en microSD dentro del dispositivo |
+| 📍 **GPS en cada nodo** | Sabe dónde se midió cada dato |
+| 📊 **Dashboard web** | Visualiza desde el navegador del celular |
+| 🤖 **Recomendaciones inteligentes** | Alertas de riego, fertilización, pH |
+| ⚡ **Bajo consumo** | 1-3 meses de batería por nodo |
+| 💰 **Bajo costo** | Hardware accesible (~USD $100 por nodo) |
 
 ---
 
-## 📋 Estado del Proyecto
+## 🏗️ Arquitectura
 
-| Fase | Estado | Descripción |
-|------|--------|-------------|
-| **0. Migración de arquitectura** | ✅ **COMPLETADA** | Nueva estructura de carpetas, headers, firmware base |
-| **1. MAIN autónomo** | 🔜 En progreso | Lectura de sensor, GPS, SD, servidor web básico |
-| **2. API local del MAIN** | 🔜 Próximo | Endpoint POST para recibir mediciones de sensores |
-| **3. Firmware SENSOR** | 🔜 Próximo | WiFi, medición, envío HTTP, deep sleep |
-| **4. Múltiples sensores** | 🔜 Próximo | Escalabilidad a 3+ nodos |
-| **5. Recomendaciones** | 🔜 Próximo | Motor de reglas agrícolas simples |
-| **6. Descubrimiento automático** | 🔜 Futuro | mDNS, UDP discovery |
-| **7. Sincronización con nube** | 🔜 Futuro | MQTT/API remota opcional |
+```
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃   Red WiFi Local del Celular 📱         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+    △           △           △           △
+    │           │           │           │
+    │           │           │           │
+┌───▼──┐    ┌───▼──┐    ┌───▼──┐    ┌─MAIN─┐
+│SENSOR│    │SENSOR│    │SENSOR│    │MAIN  │
+│  #1  │    │  #2  │    │  #3  │    │NODE  │
+│      │    │      │    │      │    │      │
+│📍GPS │    │📍GPS │    │📍GPS │    │📍GPS │
+│📊SD  │    │📊SD  │    │📊SD  │    │📊SD  │
+│🔋BAT │    │🔋BAT │    │🔋BAT │    │🔋BAT │
+└───┬──┘    └───┬──┘    └───┬──┘    └─┬────┘
+    │ HTTP       │ HTTP       │ HTTP    │ Servidor
+    │ POST       │ POST       │ POST    │ Web
+    └────────────┼────────────┼────────┘
+                 │
+                 ▼
+        ┏━━━━━━━━━━━━━━━━━┓
+        ┃  📊 Dashboard   ┃
+        ┃  en Navegador   ┃
+        ┃  (celular)      ┃
+        ┗━━━━━━━━━━━━━━━━━┛
+```
+
+**Componentes:**
+
+- **1 nodo MAIN**: Centro de procesamiento, servidor web, almacenamiento
+- **N nodos SENSOR**: Distribuidos en la finca, envían mediciones
+- **Red local WiFi**: Creada por el hotspot del celular
+- **Almacenamiento**: Todos los datos en microSD local (sin nube)
 
 ---
 
-## 📁 Estructura del Repositorio
+## 📋 Estado del Proyecto (v0.2.0)
 
-```
-Zaque/
-├── firmware/
-│   ├── zaque_device/                # Firmware unificado nuevo
-│   │   ├── zaque_device.ino         # Archivo principal
-│   │   ├── config.h                 # Configuración roles, pines, WiFi
-│   │   ├── types.h                  # Estructuras de datos y interfaces
-│   │   ├── sensor_reader.h           # Lectura de sensor RS485/Modbus
-│   │   ├── gps_reader.h             # Lectura de GPS
-│   │   ├── sd_logger.h              # Logging en microSD
-│   │   ├── wifi_manager.h           # Gestión WiFi
-│   │   ├── http_client.h            # Cliente HTTP (SENSOR)
-│   │   ├── web_server.h             # Servidor web (MAIN)
-│   │   ├── node_registry.h          # Registro de nodos (MAIN)
-│   │   ├── recommendations.h        # Engine de recomendaciones
-│   │   └── dashboard_html.h         # HTML/CSS/JS embebido
-│   │
-│   └── legacy/                       # Código anterior (referencia)
-│       ├── ESPNOW_bajo_consumo_emisor.ino
-│       └── Receptor_con_MQTT_y_Bateria.ino
-│
-├── docs/
-│   ├── arquitectura_offline_multinodo.md    # Descripción de arquitectura
-│   ├── pinout.md                    # Asignación de pines ESP32
-│   ├── protocolo_api_local.md       # Especificación de API HTTP
-│   ├── hardware.md                  # Recomendaciones de hardware
-│   ├── formato_sd.md                # Estructura de archivos en SD
-│   └── plan_migracion.md            # Plan de implementación por fases
-│
-├── dashboard/
-│   ├── prototype.html               # Prototipo visual (futuro)
-│   ├── styles.css                   # Estilos (futuro)
-│   └── app.js                       # Lógica JS (futuro)
-│
-├── tools/
-│   ├── csv_to_json.py               # Herramienta de conversión
-│   └── sd_validator.py              # Validador de archivos SD
-│
-├── cloud_optional/                  # Sincronización a nube (opcional)
-│   ├── mqtt_bridge/                 # Bridge MQTT (migración futura)
-│   ├── api/                         # API remota (futuro)
-│   └── database/                    # BD remota (futuro)
-│
-├── Base de datos/                   # (Anterior) Node.js + MQTT
-├── Backend/                         # (Anterior) Backend futuro
-├── Frontend/                        # (Anterior) Frontend futuro
-├── Api/                             # (Anterior) API futura
-├── ESP32/                           # (Anterior) Código legado
-│
-├── README.md                        # Este archivo
-├── LICENSE                          # Licencia
-└── PIN_OUT.txt                      # Configuración de pines (referencia)
-```
+| Componente | Estado | Descripción |
+|---|---|---|
+| **Arquitectura** | ✅ Completado | Migración a local offline |
+| **Firmware base** | ✅ Completado | zaque_device.ino con ambos roles |
+| **Lectura de sensores** | ✅ Completado | RS485 Modbus (humedad, temp, pH, NPK) |
+| **GPS** | ✅ Completado | Fallback a ubicación por defecto |
+| **SD Logger** | ✅ Completado | CSV + JSON local |
+| **WiFi Manager** | ✅ Completado | Conexión a redes locales |
+| **Recomendaciones** | ✅ Completado | Motor de reglas de cultivo |
+| **API REST** | 🔜 En progreso | Endpoints POST/GET |
+| **Dashboard Web** | 🔜 Próximo | HTML embebido, mapas, históricos |
+| **Múltiples sensores** | 🔜 Próximo | Escalabilidad 3+ nodos |
+| **Sincronización nube** | 🔜 Futuro | MQTT/API remota opcional |
+
+---
+
+## 📊 Variables Medidas
+
+| Variable | Unidad | Sensor | Rango |
+|---|---|---|---|
+| **Humedad del suelo** | % | RS485 Modbus | 0-100% |
+| **Temperatura del suelo** | °C | RS485 Modbus | -10 a +60°C |
+| **Conductividad eléctrica** | mS/cm | RS485 Modbus | 0-10 |
+| **Potencial de hidrógeno (pH)** | pH | RS485 Modbus | 3.0-9.0 |
+| **Nitrógeno (N)** | mg/kg | RS485 Modbus | 0-999 |
+| **Fósforo (P)** | mg/kg | RS485 Modbus | 0-999 |
+| **Potasio (K)** | mg/kg | RS485 Modbus | 0-999 |
+| **Ubicación** | lat/lon | GPS NEO-6M | - |
+| **Nivel de batería** | % | ADC ESP32 | 0-100% |
+
+---
+
+## 🤖 Recomendaciones Inteligentes
+
+El sistema genera **alertas útiles al campesino** basadas en mediciones:
+
+### 🔴 Alertas Críticas
+- **Humedad < 25%**: "Riesgo de estrés hídrico severo. Revise riego lo antes posible."
+- **Humedad > 85%**: "Riesgo de encharcamiento. Suspenda riego y revise drenaje."
+- **Conductividad > 4.0 mS/cm**: "Posible exceso de sales. Suspenda fertilización."
+
+### 🟠 Problemas Moderados
+- **Humedad baja + Temperatura alta**: "Estrés hídrico. Revise riego urgentemente."
+- **pH ácido + Fósforo bajo**: "Bloqueo nutricional. Revise corrección antes de fertilizar."
+- **Humedad alta + Conductividad alta**: "Acumulación de sales. Evite fertilizar."
+
+### 🟢 Recomendaciones Específicas
+- **NPK bajo**: "Revise estado del cultivo y considere fertilización."
+- **pH fuera de rango**: "Suelo ácido/alcalino. Consulte técnico para corrección."
+
+### ✅ Estado Óptimo
+- Cuando todo está bien: "Condiciones óptimas: Mantenga monitoreo."
 
 ---
 
@@ -131,102 +119,152 @@ Zaque/
 
 **Idéntico para MAIN y SENSOR:**
 
-| Componente | Cantidad | Especificación |
-|-----------|----------|-----------------|
-| ESP32 DEVKIT | 1 | Microcontrolador WiFi |
-| Sensor RS485 | 1 | NPK/Modbus (temperatura, humedad, pH, NPK) |
-| Módulo GPS | 1 | NEO-6M o similar (9600 bps) |
-| microSD | 1 | 32GB (almacenamiento local) |
-| Batería | 1 | 3.7V Li-Ion con protección BMS |
-| Regulador | 1 | DC-DC 5V → 3.3V |
+```
+┌─────────────────────────────────┐
+│ ESP32 DevKit (WiFi + Bluetooth) │
+├─────────────────────────────────┤
+│ • Microcontrolador dual-core     │
+│ • WiFi 802.11b/g/n              │
+│ • 4 MB Flash + 520 KB RAM        │
+│ • 36 pines GPIO                  │
+└─────────────────────────────────┘
+         │
+    ┌────┴────┐
+    │          │
+    ▼          ▼
+┌─────────┐ ┌─────────────────┐
+│ Sensor  │ │ GPS + microSD   │
+│ Modbus  │ │ + Batería       │
+│ RS485   │ │ + Regulador     │
+└─────────┘ └─────────────────┘
+```
 
-**Pines ESP32** (ver `/docs/pinout.md`):
-- GPIO 0: ADC batería
-- GPIO 2, 4: Control de potencia
-- GPIO 16/17: UART2 (RS485 Modbus)
-- GPIO 12/13: UART1 (GPS) ⚠️ Conflicto con SPI
-- GPIO 5, 18, 19: SPI (microSD)
-- A6: Entrada analógica sensor
+| Componente | Cantidad | Especificación | Costo |
+|---|---|---|---|
+| ESP32 DEVKIT | 1 | Microcontrolador WiFi | ~$15 |
+| Sensor RS485 | 1 | NPK/Modbus multiparamétrico | ~$50 |
+| Módulo GPS | 1 | NEO-6M (9600 bps) | ~$12 |
+| microSD | 1 | 32GB FAT32 | ~$8 |
+| Batería Li-Ion | 1 | 3.7V 2000mAh con BMS | ~$10 |
+| Regulador DC-DC | 1 | 5V → 3.3V | ~$3 |
+| **Total por nodo** | - | - | **~$100** |
 
-⚠️ **Nota de conflicto**: GPIO 13 es compartido entre GPS y SD. Ver `/docs/pinout.md` para soluciones.
+---
+
+## 📁 Estructura del Repositorio
+
+```
+Zaque/
+│
+├── 📦 firmware/
+│   ├── zaque_device/              ← FIRMWARE UNIFICADO (MAIN/SENSOR)
+│   │   ├── zaque_device.ino       ← Archivo principal
+│   │   ├── config.h               ← Configuración (roles, pines, WiFi)
+│   │   ├── types.h                ← Estructuras de datos e interfaces
+│   │   ├── sensor_reader.cpp      ← Lectura RS485 Modbus
+│   │   ├── gps_reader.cpp         ← Lectura GPS + fallback
+│   │   ├── sd_logger.cpp          ← Logging en microSD
+│   │   ├── wifi_manager.cpp       ← Gestión WiFi local
+│   │   ├── http_client.cpp        ← Cliente HTTP (SENSOR)
+│   │   ├── web_server.cpp         ← Servidor web (MAIN)
+│   │   ├── node_registry.cpp      ← Registro de nodos (MAIN)
+│   │   ├── recommendations.cpp    ← Motor de recomendaciones
+│   │   └── dashboard_html.h       ← HTML/CSS/JS embebido
+│   │
+│   ├── Prueba_SD/                 ← Test de tarjeta SD
+│   ├── Prueba_Sensor/             ← Test de sensor Modbus
+│   └── legacy/                    ← Código anterior (referencia)
+│
+├── 📚 docs/
+│   ├── arquitectura_offline_multinodo.md
+│   ├── pinout.md
+│   ├── protocolo_api_local.md
+│   ├── hardware.md
+│   ├── formato_sd.md
+│   └── plan_migracion.md
+│
+├── 📄 Articulo/                   ← Artículo académico LaTeX
+│   └── main.tex
+│
+├── 📋 README.md                   ← Este archivo
+├── 📋 GUIA_FLASHEO_Y_USO.md       ← Guía de instalación
+├── 📋 ZAQUE_RECOMMENDATION_ENGINE.md
+├── 📋 informe_migracion_zaque_offline_multinodo.md
+├── 📋 PIN_OUT.txt
+└── 📋 LICENSE
+```
 
 ---
 
 ## 🚀 Inicio Rápido
 
-### 1. Compilar Firmware MAIN
+### 1️⃣ Configurar Firmware MAIN
 
-```bash
-# Arduino IDE:
-# - Abrir: firmware/zaque_device/zaque_device.ino
-# - Board: ESP32 Dev Module
-# - Verificar config.h:
-#   - DEVICE_ROLE = DEVICE_ROLE_MAIN
-#   - WIFI_SSID, WIFI_PASSWORD = tu zona móvil
-#   - NODE_ID, NODE_NAME = identificar nodo
-# - Subir sketch
+```cpp
+// En config.h:
+#define DEVICE_ROLE DEVICE_ROLE_MAIN        // ✓ MAIN
+#define NODE_ID "zaque"
+#define NODE_NAME "Nodo principal - Casa finca"
+#define WIFI_SSID "Zaque"                   // Tu zona móvil
+#define WIFI_PASSWORD "free12345"
+#define DEFAULT_LATITUDE 4.6632              // Ubicación por defecto (GPS fallback)
+#define DEFAULT_LONGITUDE -74.0550
 ```
 
-### 2. Compilar Firmware SENSOR
+**En Arduino IDE:**
+- Abrir: `firmware/zaque_device/zaque_device.ino`
+- Seleccionar: Board → ESP32 Dev Module
+- Puerto: COM/ttyUSB
+- Subir
 
-```bash
-# En config.h, cambiar:
-#   DEVICE_ROLE = DEVICE_ROLE_SENSOR
-#   NODE_ID = "zona_2"
-#   NODE_NAME = "Lote de maiz"
-# Subir a otro ESP32
+### 2️⃣ Configurar Firmware SENSOR
+
+```cpp
+// En config.h:
+#define DEVICE_ROLE DEVICE_ROLE_SENSOR      // ✓ SENSOR
+#define NODE_ID "zona_2"
+#define NODE_NAME "Lote de maiz"
+#define MAIN_HOST "zaque.local"             // IP/hostname del MAIN
 ```
 
-### 3. Ejecutar
+Cambiar y subir a otro ESP32.
 
-```bash
-1. Enciende zona móvil del celular
+### 3️⃣ Ejecutar en Campo
+
+```
+1. Enciende zona móvil del celular ("Zaque")
 2. Enciende ESP32 MAIN
-   - Conecta a WiFi
-   - Levanta server en http://zaque.local
-3. Enciende ESP32 SENSOR 1, 2, ... N
-   - Conectan a WiFi
-   - Toman medición
-   - Envían a MAIN
-   - Entran en deep sleep
+   └─→ Se conecta a WiFi
+   └─→ Levanta servidor en http://zaque.local
+   └─→ Toma medición local
+   └─→ Espera sensores
+3. Enciende ESP32 SENSOR(es)
+   └─→ Se conectan a WiFi
+   └─→ Toman mediciones
+   └─→ Envían al MAIN por HTTP POST
+   └─→ Entran en deep sleep (ahorro energía)
 4. Abre navegador en celular
-   - Entra a http://zaque.local
-   - Ve dashboard con todos los nodos
+   └─→ Entra a http://zaque.local
+   └─→ Ve dashboard con todos los nodos
+   └─→ Lee recomendaciones
 ```
 
 ---
 
-## 📊 Mediciones
+## 📡 API REST Local
 
-| Variable | Unidad | Sensor |
-|----------|--------|--------|
-| Temperatura suelo | °C | RS485/Modbus |
-| Humedad suelo | % | RS485/Modbus |
-| Conductividad | µS/cm | RS485/Modbus |
-| pH | — | RS485/Modbus |
-| Nitrógeno (N) | mg/kg | RS485/Modbus |
-| Fósforo (P) | mg/kg | RS485/Modbus |
-| Potasio (K) | mg/kg | RS485/Modbus |
-| Ubicación | lat/lon | GPS NEO-6M |
-| Batería | % | ADC ESP32 |
-
----
-
-## 📡 API Local
-
-**Endpoints del MAIN:**
+### Endpoints del MAIN
 
 | Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/` | Dashboard HTML |
-| GET | `/api/status` | Estado del sistema |
-| GET | `/api/nodes` | Lista de nodos |
-| GET | `/api/measurements/latest` | Última medición por nodo |
-| GET | `/api/history?node_id=zona_2` | Histórico de un nodo |
-| POST | `/api/measurements` | Recibir medición (SENSOR → MAIN) |
-| GET | `/download/measurements.csv` | Descargar CSV |
+|---|---|---|
+| **GET** | `/` | Dashboard HTML interactivo |
+| **GET** | `/api/status` | Estado general del sistema |
+| **GET** | `/api/nodes` | Lista de nodos activos |
+| **GET** | `/api/latest` | Última medición por nodo |
+| **POST** | `/api/measurements` | Recibir medición (SENSOR → MAIN) |
+| **GET** | `/download/measurements.csv` | Descargar histórico |
 
-**Ejemplo - Enviar medición (curl):**
+### Ejemplo: Enviar Medición
 
 ```bash
 curl -X POST http://zaque.local/api/measurements \
@@ -235,127 +273,219 @@ curl -X POST http://zaque.local/api/measurements \
     "api_key": "ZAQUE_LOCAL_KEY",
     "node_id": "zona_2",
     "node_name": "Lote de maiz",
-    "role": "sensor",
-    "timestamp": "2026-05-31T16:20:00",
-    "lat": 4.7112,
-    "lon": -74.0721,
+    "latitude": 4.6632,
+    "longitude": -74.0550,
     "soil_humidity": 64.0,
+    "soil_temperature": 22.5,
+    "electrical_conductivity": 1.2,
     "ph": 6.2,
     "nitrogen": 34,
     "phosphorus": 18,
     "potassium": 41,
-    "battery_percent": 83,
-    "firmware_version": "0.2.0"
+    "battery_percent": 83
   }'
 ```
-
-Ver `/docs/protocolo_api_local.md` para documentación completa.
 
 ---
 
 ## 💾 Almacenamiento en microSD
 
-**MAIN**:
-```
-/sd/
-├── config.json          # Configuración del nodo
-├── nodes.json           # Registry de nodos
-├── latest.json          # Última medición (para dashboard)
-├── measurements.csv     # Histórico CSV
-└── logs/system.log      # Eventos del sistema
-```
+**Archivos creados automáticamente:**
 
-**SENSOR**:
 ```
-/sd/
-├── config.json          # Configuración local
-├── local_measurements.csv  # Mediciones locales
-├── pending_queue.csv    # Cola de envíos pendientes
-└── logs/sensor.log      # Eventos del sensor
+/measurements.csv
+  timestamp,node_id,node_name,lat,lon,soil_temperature,soil_humidity,...
+  1715609400,zona_2,Lote de maiz,4.6632,-74.0550,22.5,64.0,...
+
+/latest.json
+  {
+    "updated_at": "1715609400",
+    "nodes": [
+      {
+        "node_id": "zona_2",
+        "soil_humidity": 64.0,
+        "ph": 6.2,
+        "recommendation": "✅ Condiciones óptimas: Mantenga monitoreo."
+      }
+    ]
+  }
+
+/logs/system.log
+  [DEBUG] GPS reader initialized
+  [INFO] Measurement logged to SD
+  [WARNING] Battery low: 15%
 ```
 
 ---
 
-## 🌱 Recomendaciones Agrícolas
+## ⚡ Consumo de Energía
 
-Motor simple basado en reglas (futuro: expandible):
-
+### Nodo SENSOR típico
 ```
-- Humedad < 30% → "Revisar riego"
-- pH < 5.5      → "Suelo ácido, considerar enmienda"
-- pH > 7.5      → "Suelo alcalino, revisar fertilizante"
-- NPK < 30      → "Revisar fertilización"
-- Batería < 20% → "Cargar nodo"
+Medición:      ~5 seg
+Envío HTTP:    ~2 seg
+Deep Sleep:    ~30 min
+
+Consumo promedio: ~0.5 mA (en deep sleep)
+Batería típica:   2000 mAh
+Autonomía:        ≈ 1-3 meses
 ```
 
-Aviso importante: Las recomendaciones son orientativas y deben ajustarse según cultivo y acompañamiento técnico local.
+### Nodo MAIN (siempre activo)
+```
+WiFi siempre conectado
+Dashboard activo
+Consumo: ~80-150 mA promedio
 
----
-
-## 🔋 Bajo Consumo
-
-**SENSOR típico:**
-- Despierta cada 30 minutos
-- Mide en ~5 segundos
-- Envía en ~2 segundos
-- Duerme el 99% del tiempo
-- **Autonomía**: 1-3 meses con batería estándar
-
----
-
-## 📚 Documentación
-
-- **`/docs/arquitectura_offline_multinodo.md`** – Descripción general de la nueva arquitectura
-- **`/docs/pinout.md`** – Asignación de pines y conflictos
-- **`/docs/protocolo_api_local.md`** – Especificación de endpoints HTTP
-- **`/docs/hardware.md`** – Recomendaciones de componentes
-- **`/docs/formato_sd.md`** – Estructura de archivos en SD
-- **`/informe_migracion_zaque_offline_multinodo.md`** – Informe técnico completo
+Nota: MAIN debe estar conectado a alimentación (AC/solar)
+```
 
 ---
 
 ## 🔐 Seguridad
 
-**MVP (actual):**
-- API key simple en POST (por cambiar antes de compilar)
-- Sin HTTPS (red local no requiere)
-- Validación JSON básica
-
-**Futuro:**
-- JWT tokens
-- HTTPS cuando haya conectividad
-- Autenticación de nodos
+| Aspecto | MVP (Actual) | Futuro |
+|---|---|---|
+| **Red** | WiFi local | WiFi local + VPN opcional |
+| **API Key** | Hardcodeada | JWT tokens |
+| **HTTPS** | No necesario | Sí, cuando haya internet |
+| **Autenticación** | Ninguna | Por nodo |
+| **Datos** | Almacenamiento local | Encriptación opcional |
 
 ---
 
-## ⚡ Próximos Pasos
+## 📚 Documentación Completa
 
-1. ✅ [HECHO] Arquitectura y documentación
-2. 🔜 Fase 1: MAIN autónomo con dashboard
-3. 🔜 Fase 2: API local para sensores
-4. 🔜 Fase 3: Firmware SENSOR completo
-5. 🔜 Fase 4: Escalabilidad a múltiples sensores
-6. 🔜 Fase 5: Recomendaciones agrícolas
-7. 🔜 Fase 6: Descubrimiento automático (mDNS)
-8. 🔜 Fase 7: Sincronización opcional con nube
+| Documento | Contenido |
+|---|---|
+| 📖 **`docs/arquitectura_offline_multinodo.md`** | Detalles arquitectura distribuida |
+| 🔌 **`docs/pinout.md`** | Asignación de pines ESP32 y conflictos |
+| 📡 **`docs/protocolo_api_local.md`** | Especificación completa de API |
+| 🔧 **`docs/hardware.md`** | Recomendaciones y esquemáticos |
+| 💾 **`docs/formato_sd.md`** | Estructura de archivos SD |
+| 📋 **`docs/plan_migracion.md`** | Fases de implementación |
+| 🤖 **`ZAQUE_RECOMMENDATION_ENGINE.md`** | Motor de recomendaciones |
+| 📊 **`informe_migracion_zaque_offline_multinodo.md`** | Informe técnico completo |
+| 🚀 **`GUIA_FLASHEO_Y_USO.md`** | Paso a paso de instalación |
 
 ---
 
-## 📖 Modo Online (Antiguo)
+## 🛠️ Desarrollo Local
 
-La arquitectura anterior basada en MQTT se conserva en:
-- `firmware/legacy/` – Código antiguo
-- `cloud_optional/` – Futuro: sincronización con servidor
+### Compilar en Arduino IDE
 
-Esta versión seguirá siendo soportada como modo remoto opcional cuando haya conectividad a internet.
+```bash
+# Abrir archivo
+Arduino IDE → File → Open → firmware/zaque_device/zaque_device.ino
+
+# Configurar placa
+Tools → Board → ESP32 Dev Module
+Tools → Port → /dev/ttyUSB0 (o COM3 en Windows)
+
+# Compilar y subir
+Sketch → Upload (Ctrl+U)
+```
+
+### Ver logs
+
+```bash
+# Monitor serial en Arduino IDE
+Tools → Serial Monitor
+Configurar: 115200 baud
+```
+
+### Debug
+
+```cpp
+// En config.h:
+#define ENABLE_DEBUG_SERIAL true        // Habilita logs
+
+// En código:
+#if ENABLE_DEBUG_SERIAL
+  Serial.println("✓ Mi mensaje de debug");
+#endif
+```
+
+---
+
+## 🎯 Próximas Fases
+
+### 🔜 Phase 1: MAIN Autónomo
+- [x] Lectura sensor Modbus
+- [x] Lectura GPS
+- [x] Almacenamiento SD
+- [ ] Servidor web básico
+- [ ] Dashboard HTML
+
+### 🔜 Phase 2: API Local
+- [ ] Endpoint POST /api/measurements
+- [ ] Validación de datos
+- [ ] Manejo de errores
+
+### 🔜 Phase 3: Firmware SENSOR
+- [ ] Lectura de sensores
+- [ ] Envío HTTP al MAIN
+- [ ] Deep sleep
+
+### 🔜 Phase 4: Escalabilidad
+- [ ] Soporte 3+ nodos
+- [ ] Descubrimiento automático (mDNS)
+- [ ] Sincronización de estado
+
+### 🔜 Phase 5: Recomendaciones
+- [ ] Motor de reglas completo
+- [ ] Análisis predictivo
+- [ ] Recomendaciones por cultivo
+
+### 🔜 Phase 6-7: Futuro
+- [ ] Sincronización con nube (opcional)
+- [ ] IA para predicción
+- [ ] Interfaz mejorada
+
+---
+
+## 📞 Preguntas Frecuentes
+
+| Pregunta | Respuesta |
+|---|---|
+| **¿Necesito internet?** | No. Zaque funciona 100% offline con red WiFi local del celular. |
+| **¿Cuánto cuesta?** | ~$100 USD por nodo (hardware accesible). |
+| **¿Cuántos sensores?** | Teóricamente ilimitados. Límite práctico: rango WiFi (~50m). |
+| **¿Si falla GPS?** | Se usa ubicación por defecto automáticamente, sin alertas. |
+| **¿Se pierden datos sin internet?** | No. Todo se guarda localmente en microSD. |
+| **¿Compatible con otros sensores?** | Sí, arquitectura modular permite integrar RS485/Modbus. |
 
 ---
 
 ## 📄 Licencia
 
-Ver [LICENSE](LICENSE)
+```
+ZAQUE - Sistema de Monitoreo Agrícola Local Distribuido
+Copyright (C) 2026 Alejandro Roa, Laura Holguín, Andrés Guarnizo
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License.
+```
+
+Ver [LICENSE](LICENSE) para más detalles.
 
 ---
 
-**Zaque**: Monitoreo agrícola local, autónomo, tolerante a falta de internet. Hecho para campesinos, por software libre.
+## 👥 Autores
 
+- 🧑‍💻 **Alejandro Roa Aparicio** – Desarrollo firmware, arquitectura
+- 👩‍💼 **Laura Sofía Holguín Giraldo** – Análisis agrícola, documentación
+- 🔧 **Andrés Felipe Guarnizo Saavedra** – Hardware, integración sensores
+
+---
+
+<div align="center">
+
+**🌾 Zaque: Empoderando a campesinos con tecnología accesible 🌾**
+
+*Monitoreo inteligente, local, sin dependencia de internet.*
+
+[📖 Documentación Completa](docs/) • [📱 Hardware](docs/hardware.md) • [🚀 Inicio Rápido](#-inicio-rápido) • [🤖 Recomendaciones](ZAQUE_RECOMMENDATION_ENGINE.md)
+
+</div>
