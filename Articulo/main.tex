@@ -1,0 +1,202 @@
+\documentclass[journal]{IEEEtran}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+
+\title{Diseño e Implementación de un Sistema de Monitoreo a Través de la Integración de Sensores IoT y Visualización Web}
+
+\author{
+Alejandro Roa Aparicio\\
+Laura Sofía Holguín Giraldo\\
+Andrés Felipe Guarnizo Saavedra
+}
+\date{February 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducción}
+
+\maketitle
+
+\begin{abstract}
+
+La agricultura de precisión ha experimentado un crecimiento significativo gracias a la incorporación de tecnologías asociadas al Internet de las Cosas (IoT). Sin embargo, gran parte de las soluciones disponibles dependen de conectividad permanente a Internet y servicios en la nube, limitando su implementación en zonas rurales donde la infraestructura de telecomunicaciones es insuficiente. Este artículo presenta ZAQUE, un sistema distribuido de monitoreo agrícola basado en dispositivos ESP32 diseñado para operar en entornos con conectividad limitada. La arquitectura propuesta integra nodos sensores, almacenamiento local mediante tarjetas microSD, georreferenciación GPS, comunicación HTTP sobre redes WiFi locales y un panel web para visualización de información. Además, incorpora un motor de recomendaciones agrícolas basado en parámetros del suelo como humedad, pH y concentración de nutrientes. Los resultados esperados demuestran la viabilidad de una solución de bajo costo capaz de apoyar la toma de decisiones en agricultura de precisión sin depender de servicios externos.
+
+\end{abstract}
+
+\section{Introducción}
+
+La agricultura moderna enfrenta desafíos asociados al crecimiento poblacional, la optimización de recursos naturales y la necesidad de incrementar la productividad de los cultivos. En este contexto, la agricultura de precisión surge como una estrategia tecnológica que permite monitorear variables ambientales y agronómicas para mejorar la toma de decisiones.
+
+El Internet de las Cosas (IoT) ha facilitado el desarrollo de sistemas de monitoreo capaces de recopilar datos en tiempo real mediante sensores distribuidos. No obstante, muchas de estas soluciones dependen de plataformas en la nube y conectividad continua a Internet, condición que no siempre está disponible en regiones rurales.
+
+En Colombia existen numerosas zonas agrícolas donde la cobertura de red es limitada o inexistente, dificultando la implementación de tecnologías digitales avanzadas. Esta problemática motiva el desarrollo de sistemas autónomos que puedan operar localmente sin depender de infraestructura externa.
+
+Con el objetivo de responder a esta necesidad, se propone ZAQUE, un sistema distribuido de monitoreo agrícola diseñado para funcionar mediante redes locales inalámbricas y dispositivos ESP32. El sistema permite recopilar información proveniente de múltiples puntos de medición, almacenarla localmente y visualizarla mediante una interfaz web accesible desde dispositivos móviles.
+
+\section{Arquitectura General del Sistema}
+
+ZAQUE está conformado por una arquitectura distribuida basada en un nodo principal y múltiples nodos sensores.
+
+La comunicación entre dispositivos se realiza mediante una red WiFi local generada por un dispositivo móvil o punto de acceso. Esta estrategia elimina la necesidad de conexión a Internet y permite que todos los nodos operen dentro de una misma red privada.
+
+La arquitectura se divide en los siguientes componentes:
+
+\begin{itemize}
+\item Nodo principal (MAIN).
+\item Nodos sensores distribuidos.
+\item Sistema de almacenamiento local.
+\item Módulos GPS.
+\item Dashboard web.
+\item Motor de recomendaciones agrícolas.
+\end{itemize}
+
+\section{Nodo Principal}
+
+El nodo principal constituye el núcleo de procesamiento del sistema.
+
+Sus principales responsabilidades incluyen:
+
+\begin{itemize}
+\item Recepción de datos provenientes de los nodos sensores.
+\item Almacenamiento histórico de información.
+\item Procesamiento de variables agrícolas.
+\item Generación de recomendaciones.
+\item Gestión de usuarios y configuración.
+\item Hospedaje de la interfaz web.
+\end{itemize}
+
+El hardware utilizado está basado en una tarjeta ESP32 DevKit debido a su bajo costo, conectividad WiFi integrada y capacidad de procesamiento para aplicaciones IoT.
+
+\section{Nodos Sensores}
+
+Los nodos sensores son dispositivos autónomos ubicados en diferentes sectores del terreno agrícola.
+
+Cada nodo incorpora:
+
+\begin{itemize}
+\item Microcontrolador ESP32.
+\item Sensor de suelo RS485 compatible con Modbus.
+\item Módulo GPS.
+\item Tarjeta microSD.
+\item Sistema de alimentación independiente.
+\end{itemize}
+
+La función principal de estos dispositivos consiste en recopilar información del suelo y transmitirla periódicamente hacia el nodo principal.
+
+Adicionalmente, cada nodo almacena información localmente para evitar pérdidas de datos en caso de interrupciones temporales de comunicación.
+
+\section{Variables Monitoreadas}
+
+El sistema permite registrar múltiples variables relacionadas con la calidad del suelo.
+
+Entre las principales variables monitoreadas se encuentran:
+
+\begin{itemize}
+\item Humedad del suelo.
+\item Temperatura del suelo.
+\item Potencial de hidrógeno (pH).
+\item Conductividad eléctrica.
+\item Concentración de nitrógeno (N).
+\item Concentración de fósforo (P).
+\item Concentración de potasio (K).
+\item Ubicación geográfica.
+\item Nivel de batería.
+\end{itemize}
+
+Estas variables permiten obtener una visión integral de las condiciones del cultivo y facilitan la toma de decisiones agronómicas.
+
+\section{Comunicación de Datos}
+
+La transmisión de información se realiza mediante solicitudes HTTP utilizando estructuras de datos en formato JSON.
+
+Cada paquete transmitido contiene:
+
+\begin{itemize}
+\item Identificador del nodo.
+\item Fecha y hora de medición.
+\item Coordenadas GPS.
+\item Variables agronómicas registradas.
+\item Estado de batería.
+\item Información de firmware.
+\end{itemize}
+
+La utilización de HTTP simplifica la implementación y facilita la interoperabilidad entre dispositivos dentro de la red local.
+
+\section{Almacenamiento de Información}
+
+ZAQUE incorpora almacenamiento local mediante tarjetas microSD instaladas tanto en el nodo principal como en los nodos sensores.
+
+La información se almacena en formatos CSV y JSON con el objetivo de facilitar su posterior análisis.
+
+Los archivos almacenados incluyen:
+
+\begin{itemize}
+\item Historial de mediciones.
+\item Configuración del sistema.
+\item Registro de nodos.
+\item Eventos del sistema.
+\item Recomendaciones generadas.
+\end{itemize}
+
+Esta estrategia garantiza la persistencia de la información incluso en ausencia de conectividad.
+
+\section{Motor de Recomendaciones}
+
+El sistema incorpora un mecanismo de apoyo a la toma de decisiones basado en reglas predefinidas.
+
+Las recomendaciones son generadas a partir de la interpretación de variables como humedad, pH y nutrientes.
+
+Por ejemplo:
+
+\begin{itemize}
+\item Humedad baja: recomendación de riego.
+\item Humedad excesiva: advertencia de encharcamiento.
+\item pH ácido: sugerencia de corrección química.
+\item Deficiencia de nutrientes: recomendación de fertilización.
+\end{itemize}
+
+Este enfoque permite transformar los datos recopilados en información útil para agricultores y técnicos.
+
+\section{Dashboard Web}
+
+El nodo principal implementa un servidor web embebido accesible desde cualquier dispositivo conectado a la red local.
+
+La interfaz permite:
+
+\begin{itemize}
+\item Visualizar datos en tiempo real.
+\item Consultar información histórica.
+\item Identificar la ubicación de los sensores.
+\item Revisar recomendaciones generadas.
+\item Descargar registros almacenados.
+\end{itemize}
+
+El dashboard constituye el principal punto de interacción entre el usuario y el sistema.
+
+\section{Ventajas de la Solución}
+
+La propuesta desarrollada presenta diversas ventajas frente a sistemas tradicionales basados exclusivamente en la nube.
+
+Entre ellas destacan:
+
+\begin{itemize}
+\item Operación sin Internet.
+\item Bajo costo de implementación.
+\item Escalabilidad mediante nuevos nodos.
+\item Almacenamiento local seguro.
+\item Facilidad de despliegue.
+\item Reducción de dependencia tecnológica externa.
+\end{itemize}
+
+\section{Conclusiones}
+
+ZAQUE constituye una alternativa tecnológica para el monitoreo agrícola en entornos rurales con limitaciones de conectividad. La arquitectura distribuida basada en ESP32 permite recopilar, almacenar y visualizar información agronómica de manera autónoma mediante redes locales inalámbricas.
+
+La integración de sensores de suelo, almacenamiento local, georreferenciación GPS y motores de recomendación proporciona una herramienta de apoyo para la toma de decisiones agrícolas. Asimismo, el uso de hardware de bajo costo favorece la adopción de tecnologías de agricultura de precisión en pequeñas y medianas explotaciones agrícolas.
+
+Como trabajo futuro se plantea la incorporación de algoritmos de inteligencia artificial, sincronización opcional con servicios en la nube y técnicas avanzadas de análisis predictivo para mejorar la capacidad de diagnóstico del sistema.
+\end{document}
+
