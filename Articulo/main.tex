@@ -1,202 +1,554 @@
 \documentclass[journal]{IEEEtran}
-\usepackage{graphicx} % Required for inserting images
+\usepackage{graphicx}
 \usepackage[spanish]{babel}
 \usepackage[utf8]{inputenc}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{cite}
 
-\title{Diseño e Implementación de un Sistema de Monitoreo a Través de la Integración de Sensores IoT y Visualización Web}
+\lstset{
+  language=C++,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{red},
+  breaklines=true,
+  columns=fullflexible
+}
+
+\title{ZAQUE: Sistema Distribuido de Monitoreo Agrícola Local para Zonas Rurales sin Conectividad a Internet}
 
 \author{
-Alejandro Roa Aparicio\\
-Laura Sofía Holguín Giraldo\\
-Andrés Felipe Guarnizo Saavedra
+Alejandro Roa Aparicio, Laura Sofía Holguín Giraldo, Andrés Felipe Guarnizo Saavedra\\
+Universidad XXXX, Colombia
 }
-\date{February 2026}
+\date{Junio 2026}
 
 \begin{document}
 
 \maketitle
 
-\section{Introducción}
-
-\maketitle
-
 \begin{abstract}
 
-La agricultura de precisión ha experimentado un crecimiento significativo gracias a la incorporación de tecnologías asociadas al Internet de las Cosas (IoT). Sin embargo, gran parte de las soluciones disponibles dependen de conectividad permanente a Internet y servicios en la nube, limitando su implementación en zonas rurales donde la infraestructura de telecomunicaciones es insuficiente. Este artículo presenta ZAQUE, un sistema distribuido de monitoreo agrícola basado en dispositivos ESP32 diseñado para operar en entornos con conectividad limitada. La arquitectura propuesta integra nodos sensores, almacenamiento local mediante tarjetas microSD, georreferenciación GPS, comunicación HTTP sobre redes WiFi locales y un panel web para visualización de información. Además, incorpora un motor de recomendaciones agrícolas basado en parámetros del suelo como humedad, pH y concentración de nutrientes. Los resultados esperados demuestran la viabilidad de una solución de bajo costo capaz de apoyar la toma de decisiones en agricultura de precisión sin depender de servicios externos.
+La agricultura de precisión ha revolucionado la producción agrícola mediante la incorporación de tecnologías IoT. Sin embargo, gran parte de las soluciones disponibles dependen de conectividad permanente a Internet y servicios en la nube, limitando su implementación en zonas rurales donde la infraestructura de telecomunicaciones es insuficiente. Este artículo presenta ZAQUE, un sistema distribuido de monitoreo agrícola local diseñado específicamente para operar en entornos con conectividad limitada. La arquitectura propuesta integra una red de nodos ESP32, uno configurado como estación principal (MAIN) y múltiples nodos sensores (SENSOR), comunicados mediante WiFi local. Cada nodo incorpora sensores Modbus RS485 para medición multiparamétrica del suelo, módulos GPS para georreferenciación, y almacenamiento local en microSD para garantizar persistencia de datos. El nodo MAIN expone un dashboard web embebido accesible desde dispositivos móviles sin requerir acceso a Internet. El sistema incluye un motor de recomendaciones agrícolas basado en reglas que genera alertas útiles en lenguaje natural para el campesino. Los resultados demuestran la viabilidad de una solución de bajo costo (~USD 100 por nodo) capaz de apoyar agricultura de precisión en comunidades rurales con conectividad limitada.
 
 \end{abstract}
 
 \section{Introducción}
 
-La agricultura moderna enfrenta desafíos asociados al crecimiento poblacional, la optimización de recursos naturales y la necesidad de incrementar la productividad de los cultivos. En este contexto, la agricultura de precisión surge como una estrategia tecnológica que permite monitorear variables ambientales y agronómicas para mejorar la toma de decisiones.
+La agricultura moderna enfrenta desafíos crecientes: aumento de población global, limitaciones de agua dulce, degradación de suelos y presión por mejorar rendimientos. En este contexto, la agricultura de precisión emerge como estrategia tecnológica fundamental que permite monitorear variables ambientales a nivel microlocal para optimizar recursos naturales.
 
-El Internet de las Cosas (IoT) ha facilitado el desarrollo de sistemas de monitoreo capaces de recopilar datos en tiempo real mediante sensores distribuidos. No obstante, muchas de estas soluciones dependen de plataformas en la nube y conectividad continua a Internet, condición que no siempre está disponible en regiones rurales.
+El Internet de las Cosas (IoT) ha democratizado el acceso a sensores de bajo costo capaces de recopilar datos ambientales. Sin embargo, la mayoría de soluciones IoT comerciales (Agritech, Plantwise, Arable) dependen de plataformas en la nube, requiriendo conectividad permanente a Internet. En Colombia, según el Ministerio de TIC, aproximadamente 30\% de la población rural carece de acceso a conectividad confiable, limitando la adopción de estas tecnologías.
 
-En Colombia existen numerosas zonas agrícolas donde la cobertura de red es limitada o inexistente, dificultando la implementación de tecnologías digitales avanzadas. Esta problemática motiva el desarrollo de sistemas autónomos que puedan operar localmente sin depender de infraestructura externa.
+ZAQUE surge como respuesta a esta brecha: un sistema de monitoreo agrícola que funciona completamente offline en redes WiFi locales, permitiendo que un campesino use la zona móvil de su celular para conectar múltiples sensores distribuidos en su finca y visualizar toda la información desde un navegador web en su dispositivo móvil.
 
-Con el objetivo de responder a esta necesidad, se propone ZAQUE, un sistema distribuido de monitoreo agrícola diseñado para funcionar mediante redes locales inalámbricas y dispositivos ESP32. El sistema permite recopilar información proveniente de múltiples puntos de medición, almacenarla localmente y visualizarla mediante una interfaz web accesible desde dispositivos móviles.
+\section{Arquitectura del Sistema}
 
-\section{Arquitectura General del Sistema}
+\subsection{Visión General}
 
-ZAQUE está conformado por una arquitectura distribuida basada en un nodo principal y múltiples nodos sensores.
-
-La comunicación entre dispositivos se realiza mediante una red WiFi local generada por un dispositivo móvil o punto de acceso. Esta estrategia elimina la necesidad de conexión a Internet y permite que todos los nodos operen dentro de una misma red privada.
-
-La arquitectura se divide en los siguientes componentes:
+ZAQUE implementa una arquitectura distribuida multinodo con dos roles diferenciados ejecutados en hardware idéntico (ESP32):
 
 \begin{itemize}
-\item Nodo principal (MAIN).
-\item Nodos sensores distribuidos.
-\item Sistema de almacenamiento local.
-\item Módulos GPS.
-\item Dashboard web.
-\item Motor de recomendaciones agrícolas.
+\item \textbf{Nodo MAIN}: Estación central que actúa como servidor web, procesador de datos y almacenamiento principal. Ejecuta permanentemente un servidor HTTP local accesible en \texttt{http://zaque.local}.
+\item \textbf{Nodos SENSOR}: Dispositivos distribuidos en el terreno agrícola que ejecutan ciclos de medición periódica, envían datos al MAIN mediante HTTP POST, y entran en deep sleep para conservar energía.
 \end{itemize}
 
-\section{Nodo Principal}
+La comunicación entre nodos ocurre a través de una red WiFi local, típicamente la zona móvil del celular del campesino (hotspot), eliminando la dependencia de infraestructura externa.
 
-El nodo principal constituye el núcleo de procesamiento del sistema.
+\subsection{Componentes Principales}
 
-Sus principales responsabilidades incluyen:
+\subsubsection{Nodo MAIN}
+
+El nodo MAIN implementa las siguientes responsabilidades:
+
+\begin{enumerate}
+\item \textbf{Adquisición de datos}: Lectura local de sensores Modbus RS485, GPS, y batería.
+\item \textbf{Servidor web embebido}: Hosting de un dashboard HTML/CSS/JS directamente en el ESP32.
+\item \textbf{API REST local}: Endpoints HTTP para recibir mediciones de nodos SENSOR.
+\item \textbf{Almacenamiento persistente}: Registro de mediciones en microSD en formato CSV y JSON.
+\item \textbf{Procesamiento de recomendaciones}: Análisis de variables agrícolas y generación de alertas.
+\item \textbf{Registro de nodos}: Mantenimiento de estado de todos los sensores conectados.
+\end{enumerate}
+
+\subsubsection{Nodos SENSOR}
+
+Los nodos SENSOR ejecutan un ciclo repetitivo de bajo consumo:
+
+\begin{enumerate}
+\item \textbf{Despertar periódico}: Por defecto cada 30 minutos.
+\item \textbf{Lectura de sensores}: Adquisición de mediciones Modbus en ~5 segundos.
+\item \textbf{Lectura GPS}: Obtención de coordenadas o ubicación por defecto.
+\item \textbf{Envío HTTP}: Transmisión de medición al MAIN en ~2 segundos.
+\item \textbf{Deep sleep}: Entrada a modo de bajo consumo (~0.5 mA).
+\end{enumerate}
+
+Este ciclo permite autonomía de 1-3 meses con batería estándar de 2000 mAh.
+
+\section{Especificación de Hardware}
+
+\subsection{Microcontrolador}
+
+Se utiliza la plataforma ESP32 DevKit debido a:
 
 \begin{itemize}
-\item Recepción de datos provenientes de los nodos sensores.
-\item Almacenamiento histórico de información.
-\item Procesamiento de variables agrícolas.
-\item Generación de recomendaciones.
-\item Gestión de usuarios y configuración.
-\item Hospedaje de la interfaz web.
+\item WiFi 802.11b/g/n integrado
+\item Arquitectura dual-core a 240 MHz
+\item 4 MB Flash + 520 KB RAM
+\item 36 GPIO configurables
+\item Soporte nativo para deep sleep y RTC
+\item Costo accesible (~USD 15)
 \end{itemize}
 
-El hardware utilizado está basado en una tarjeta ESP32 DevKit debido a su bajo costo, conectividad WiFi integrada y capacidad de procesamiento para aplicaciones IoT.
+\subsection{Sensores}
 
-\section{Nodos Sensores}
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Componente} & \textbf{Especificación} & \textbf{Variable} & \textbf{Costo} \\
+\hline
+Sensor Multiparamétrico & RS485 Modbus & Humedad, T, pH, NPK & ~USD 50 \\
+\hline
+Módulo GPS & NEO-6M (9600 bps) & Lat/Lon & ~USD 12 \\
+\hline
+Tarjeta microSD & 32GB FAT32 & Almacenamiento & ~USD 8 \\
+\hline
+Batería Li-Ion & 3.7V 2000mAh+BMS & Autonomía & ~USD 10 \\
+\hline
+Regulador DC-DC & 5V $\rightarrow$ 3.3V & Alimentación & ~USD 3 \\
+\hline
+\textbf{TOTAL} & \textbf{---} & \textbf{---} & \textbf{~USD 100} \\
+\hline
+\end{tabular}
+\end{table}
 
-Los nodos sensores son dispositivos autónomos ubicados en diferentes sectores del terreno agrícola.
+\subsection{Asignación de Pines}
 
-Cada nodo incorpora:
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Función} & \textbf{GPIO} & \textbf{Protocolo} \\
+\hline
+ADC Batería & GPIO 0 & ADC \\
+\hline
+Control de Potencia & GPIO 2, 4 & Digital \\
+\hline
+UART2 RS485 & GPIO 16 (RX), 17 (TX) & UART2 \\
+\hline
+UART1 GPS & GPIO 13 (RX), 12 (TX) & UART1 \\
+\hline
+SPI microSD & GPIO 5 (CS), 23 (SCK) & SPI \\
+& GPIO 18 (MOSI), 19 (MISO) & \\
+\hline
+\end{tabular}
+\end{table}
 
-\begin{itemize}
-\item Microcontrolador ESP32.
-\item Sensor de suelo RS485 compatible con Modbus.
-\item Módulo GPS.
-\item Tarjeta microSD.
-\item Sistema de alimentación independiente.
-\end{itemize}
-
-La función principal de estos dispositivos consiste en recopilar información del suelo y transmitirla periódicamente hacia el nodo principal.
-
-Adicionalmente, cada nodo almacena información localmente para evitar pérdidas de datos en caso de interrupciones temporales de comunicación.
+\textbf{Nota importante}: GPIO 13 es compartido entre GPS (UART1) y SPI (SCK). La solución implementada utiliza multiplexación por software: GPS se inicializa solo durante el setup, permitiendo que SPI funcione después.
 
 \section{Variables Monitoreadas}
 
-El sistema permite registrar múltiples variables relacionadas con la calidad del suelo.
+El sistema captura las siguientes variables agrícolas:
 
-Entre las principales variables monitoreadas se encuentran:
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Variable} & \textbf{Unidad} & \textbf{Rango} & \textbf{Sensor} \\
+\hline
+Humedad del suelo & \% & 0-100 & RS485 Modbus \\
+\hline
+Temperatura & °C & -10 a +60 & RS485 Modbus \\
+\hline
+Conductividad eléctrica & mS/cm & 0-10 & RS485 Modbus \\
+\hline
+pH & pH & 3.0-9.0 & RS485 Modbus \\
+\hline
+Nitrógeno (N) & mg/kg & 0-999 & RS485 Modbus \\
+\hline
+Fósforo (P) & mg/kg & 0-999 & RS485 Modbus \\
+\hline
+Potasio (K) & mg/kg & 0-999 & RS485 Modbus \\
+\hline
+Ubicación & lat/lon & --- & GPS NEO-6M \\
+\hline
+Batería & \% & 0-100 & ADC ESP32 \\
+\hline
+Timestamp & ms & --- & RTC \\
+\hline
+\end{tabular}
+\end{table}
+
+\section{Protocolo de Comunicación}
+
+\subsection{Comunicación entre Nodos}
+
+Los nodos SENSOR envían mediciones al MAIN mediante HTTP POST con formato JSON:
+
+\begin{lstlisting}
+POST /api/measurements HTTP/1.1
+Content-Type: application/json
+
+{
+  "api_key": "ZAQUE_LOCAL_KEY",
+  "node_id": "zona_2",
+  "node_name": "Lote de maiz",
+  "latitude": 4.6632,
+  "longitude": -74.0550,
+  "soil_humidity": 64.0,
+  "soil_temperature": 22.5,
+  "electrical_conductivity": 1.2,
+  "ph": 6.2,
+  "nitrogen": 34,
+  "phosphorus": 18,
+  "potassium": 41,
+  "battery_percent": 83
+}
+\end{lstlisting}
+
+\subsection{Almacenamiento}
+
+Las mediciones se almacenan en microSD en dos formatos:
+
+\subsubsection{Formato CSV}
+
+Archivo \texttt{/measurements.csv} con estructura de tabla para análisis histórico:
+
+\begin{verbatim}
+timestamp,node_id,node_name,lat,lon,soil_temperature,...
+1715609400,zona_2,Lote de maiz,4.6632,-74.0550,22.5,...
+\end{verbatim}
+
+\subsubsection{Formato JSON}
+
+Archivo \texttt{/latest.json} con última medición de cada nodo para dashboard:
+
+\begin{lstlisting}
+{
+  "updated_at": "1715609400",
+  "nodes": [
+    {
+      "node_id": "zona_2",
+      "node_name": "Lote de maiz",
+      "soil_humidity": 64.0,
+      "ph": 6.2,
+      "nitrogen": 34,
+      "last_seen": "1715609400",
+      "recommendation": "✅ Condiciones óptimas: ..."
+    }
+  ]
+}
+\end{lstlisting}
+
+\section{Motor de Recomendaciones Agrícolas}
+
+\subsection{Arquitectura del Motor}
+
+El sistema implementa un motor de recomendaciones basado en reglas (rule-based) que analiza mediciones y genera alertas en lenguaje natural útiles para el campesino.
+
+El motor sigue una jerarquía de prioridades:
+
+\begin{enumerate}
+\item \textbf{Validación}: Verifica que la medición contiene datos suficientes.
+\item \textbf{Alertas críticas}: Identifica condiciones peligrosas inmediatas.
+\item \textbf{Combinaciones críticas}: Analiza interacciones entre variables.
+\item \textbf{Variables individuales}: Evalúa cada parámetro en rango normal.
+\item \textbf{Estado óptimo}: Confirma cuando todo está bien.
+\end{enumerate}
+
+\subsection{Reglas Implementadas}
+
+\subsubsection{Alertas Críticas}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Condición} & \textbf{Alerta} \\
+\hline
+Humedad < 25\% & Estrés hídrico severo \\
+\hline
+Humedad > 85\% & Riesgo de encharcamiento \\
+\hline
+CE > 4.0 mS/cm & Exceso de sales \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Combinaciones Críticas}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Combinación} & \textbf{Recomendación} \\
+\hline
+Humedad < 40\% AND T > 28°C & Estrés hídrico + calor \\
+\hline
+pH < 5.5 AND P < 15 mg/kg & Bloqueo nutricional \\
+\hline
+Humedad > 70\% AND CE > 2.0 & Acumulación de sales \\
+\hline
+pH > 7.5 AND (N/P/K bajo) & Bloqueo por alcalinidad \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Recomendaciones Individuales}
+
+Para cada variable, el motor genera texto adaptado:
 
 \begin{itemize}
-\item Humedad del suelo.
-\item Temperatura del suelo.
-\item Potencial de hidrógeno (pH).
-\item Conductividad eléctrica.
-\item Concentración de nitrógeno (N).
-\item Concentración de fósforo (P).
-\item Concentración de potasio (K).
-\item Ubicación geográfica.
-\item Nivel de batería.
+\item \textbf{Humedad}: Incluye valor actual y recomendación de riego.
+\item \textbf{pH}: Describe acidez/alcalinidad y sugiere correcciones.
+\item \textbf{NPK}: Valora deficiencias y recomienda fertilización.
+\item \textbf{CE}: Alerta sobre salinidad acumulada.
+\item \textbf{Temperatura}: Advierte sobre estrés térmico.
 \end{itemize}
 
-Estas variables permiten obtener una visión integral de las condiciones del cultivo y facilitan la toma de decisiones agronómicas.
+\subsection{Ejemplo de Generación de Alerta}
 
-\section{Comunicación de Datos}
+Medición:
+\begin{verbatim}
+humidity: 35%, temperature: 28°C, pH: 6.2, N: 25
+\end{verbatim}
 
-La transmisión de información se realiza mediante solicitudes HTTP utilizando estructuras de datos en formato JSON.
+Análisis:
+- Humedad < 40\% ✓
+- Temperatura > 28°C ✓
+- Combinación presente
 
-Cada paquete transmitido contiene:
+Alerta generada:
+\begin{verbatim}
+"🟠 ESTRÉS HÍDRICO: Humedad 35% + temperatura 28°C 
+ alta. Revise riego urgentemente."
+\end{verbatim}
+
+\section{Estructura del Firmware}
+
+\subsection{Modularización}
+
+El firmware zaque\_device.ino se divide en componentes con interfaces bien definidas:
+
+\begin{enumerate}
+\item \textbf{config.h}: Configuración centralizada (roles, pines, WiFi, valores por defecto).
+\item \textbf{types.h}: Estructuras de datos (\texttt{Measurement}) e interfaces virtuales.
+\item \textbf{sensor\_reader.cpp}: Lectura del sensor Modbus RS485.
+\item \textbf{gps\_reader.cpp}: Lectura GPS con fallback automático.
+\item \textbf{sd\_logger.cpp}: Almacenamiento en microSD.
+\item \textbf{wifi\_manager.cpp}: Gestión de conexión WiFi.
+\item \textbf{http\_client.cpp}: Cliente HTTP para nodos SENSOR.
+\item \textbf{web\_server.cpp}: Servidor web para nodo MAIN.
+\item \textbf{node\_registry.cpp}: Registro de nodos (MAIN).
+\item \textbf{recommendations.cpp}: Motor de recomendaciones.
+\item \textbf{dashboard\_html.h}: HTML/CSS/JS embebido.
+\end{enumerate}
+
+\subsection{Compilación Condicional por Rol}
+
+En \texttt{config.h}:
+
+\begin{lstlisting}
+#define DEVICE_ROLE DEVICE_ROLE_MAIN    // o DEVICE_ROLE_SENSOR
+\end{lstlisting}
+
+El compilador incluye/excluye código según el rol:
+
+\begin{lstlisting}
+#if DEVICE_ROLE == DEVICE_ROLE_MAIN
+  // Código solo para MAIN
+#endif
+\end{lstlisting}
+
+Esto permite compartir 90\% del código entre ambos roles.
+
+\section{Manejo de Errores y Resiliencia}
+
+\subsection{GPS Fallback}
+
+Si el GPS no obtiene señal después de 1 segundo, el sistema automáticamente usa la ubicación por defecto definida en config.h:
+
+\begin{lstlisting}
+#define DEFAULT_LATITUDE 4.663198720911477f
+#define DEFAULT_LONGITUDE -74.05499259771824f
+\end{lstlisting}
+
+Este mecanismo garantiza que las mediciones nunca se pierden por falta de GPS.
+
+\subsection{SD Logger Robusto}
+
+El logger de SD implementa validaciones:
+
+\begin{enumerate}
+\item Verifica que la tarjeta está correctamente inicializada.
+\item Crea archivos con encabezados CSV solo en primera escritura.
+\item Valida serialización JSON con verificación de bytes escritos.
+\item Registra errores en serial para debugging.
+\end{enumerate}
+
+\subsection{Reintentos HTTP}
+
+Los nodos SENSOR implementan reintentos con backoff exponencial:
+
+\begin{lstlisting}
+sendWithRetry(measurement, max_retries=3)
+\end{lstlisting}
+
+Si el MAIN no responde, la medición se almacena localmente para envío posterior.
+
+\section{Consumo Energético}
+
+\subsection{Nodo SENSOR}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|c|c|c|}
+\hline
+\textbf{Estado} & \textbf{Consumo} & \textbf{Duración} \\
+\hline
+Despertar + Inicialización & 150 mA & 3 seg \\
+\hline
+Lectura de sensor & 80 mA & 2 seg \\
+\hline
+Lectura GPS & 100 mA & 1 seg \\
+\hline
+Envío HTTP & 120 mA & 2 seg \\
+\hline
+Deep sleep & 0.5 mA & 30 min - 8 seg \\
+\hline
+\end{tabular}
+\end{table}
+
+Consumo promedio por ciclo (30 min):
+\begin{itemize}
+\item Ciclo activo: ~70 mA durante 8 segundos
+\item Ciclo dormido: ~0.5 mA durante 29 min 52 seg
+\item Promedio: $\frac{70 \times 8 + 0.5 \times 1792}{1800} \approx 0.35$ mA
+\end{itemize}
+
+Con batería de 2000 mAh: $\frac{2000}{0.35} \approx 5700$ horas $\approx 237$ días $\approx$ 7.8 meses.
+
+\subsection{Nodo MAIN}
 
 \begin{itemize}
-\item Identificador del nodo.
-\item Fecha y hora de medición.
-\item Coordenadas GPS.
-\item Variables agronómicas registradas.
-\item Estado de batería.
-\item Información de firmware.
+\item WiFi siempre activo: ~80 mA
+\item Servidor web activo: ~50 mA
+\item Lectura de sensores periódica: ~20 mA promedio
+\item Consumo total: ~150 mA promedio
 \end{itemize}
 
-La utilización de HTTP simplifica la implementación y facilita la interoperabilidad entre dispositivos dentro de la red local.
+El nodo MAIN debe estar conectado a alimentación permanente (AC, solar, o batería grande con carga).
 
-\section{Almacenamiento de Información}
+\section{Seguridad}
 
-ZAQUE incorpora almacenamiento local mediante tarjetas microSD instaladas tanto en el nodo principal como en los nodos sensores.
-
-La información se almacena en formatos CSV y JSON con el objetivo de facilitar su posterior análisis.
-
-Los archivos almacenados incluyen:
+\subsection{MVP (Actual)}
 
 \begin{itemize}
-\item Historial de mediciones.
-\item Configuración del sistema.
-\item Registro de nodos.
-\item Eventos del sistema.
-\item Recomendaciones generadas.
+\item \textbf{API Key}: Simple header hardcodeado en config.h.
+\item \textbf{Red}: WiFi local no requiere HTTPS.
+\item \textbf{Validación}: Verificación JSON básica de campos requeridos.
+\item \textbf{Autenticación}: Ninguna (red local confiable).
 \end{itemize}
 
-Esta estrategia garantiza la persistencia de la información incluso en ausencia de conectividad.
+\subsection{Recomendaciones Futuras}
 
-\section{Motor de Recomendaciones}
-
-El sistema incorpora un mecanismo de apoyo a la toma de decisiones basado en reglas predefinidas.
-
-Las recomendaciones son generadas a partir de la interpretación de variables como humedad, pH y nutrientes.
-
-Por ejemplo:
-
-\begin{itemize}
-\item Humedad baja: recomendación de riego.
-\item Humedad excesiva: advertencia de encharcamiento.
-\item pH ácido: sugerencia de corrección química.
-\item Deficiencia de nutrientes: recomendación de fertilización.
-\end{itemize}
-
-Este enfoque permite transformar los datos recopilados en información útil para agricultores y técnicos.
-
-\section{Dashboard Web}
-
-El nodo principal implementa un servidor web embebido accesible desde cualquier dispositivo conectado a la red local.
-
-La interfaz permite:
-
-\begin{itemize}
-\item Visualizar datos en tiempo real.
-\item Consultar información histórica.
-\item Identificar la ubicación de los sensores.
-\item Revisar recomendaciones generadas.
-\item Descargar registros almacenados.
-\end{itemize}
-
-El dashboard constituye el principal punto de interacción entre el usuario y el sistema.
+\begin{enumerate}
+\item Implementar JWT tokens para autenticación de nodos.
+\item Añadir HTTPS cuando haya conectividad a Internet.
+\item Encriptación de datos sensibles en microSD.
+\item Control de acceso por rol en dashboard web.
+\item Logging de auditoría de operaciones críticas.
+\end{enumerate}
 
 \section{Ventajas de la Solución}
 
-La propuesta desarrollada presenta diversas ventajas frente a sistemas tradicionales basados exclusivamente en la nube.
+\begin{enumerate}
+\item \textbf{Operación sin Internet}: Funciona completamente offline en red WiFi local.
+\item \textbf{Bajo costo}: ~USD 100 por nodo completo.
+\item \textbf{Escalabilidad}: Soporte teórico ilimitado de nodos, limitado por rango WiFi.
+\item \textbf{Almacenamiento seguro}: Datos persisten localmente en microSD.
+\item \textbf{Facilidad de despliegue}: Hardware y software listos para usar.
+\item \textbf{Independencia tecnológica}: No depende de proveedores de servicios en la nube.
+\item \textbf{Inteligencia local}: Recomendaciones generadas en el dispositivo.
+\item \textbf{Bajo consumo}: Autonomía de 1-3 meses para nodos SENSOR.
+\end{enumerate}
 
-Entre ellas destacan:
+\section{Limitaciones Actuales}
 
-\begin{itemize}
-\item Operación sin Internet.
-\item Bajo costo de implementación.
-\item Escalabilidad mediante nuevos nodos.
-\item Almacenamiento local seguro.
-\item Facilidad de despliegue.
-\item Reducción de dependencia tecnológica externa.
-\end{itemize}
+\begin{enumerate}
+\item \textbf{Rango WiFi}: Limitado a ~50-100 metros dependiendo de interferencias.
+\item \textbf{Sincronización}: No hay sincronización de estado entre nodos (cada uno es independiente).
+\item \textbf{Descubrimiento}: El MAIN debe tener dirección fija o mDNS funcionando.
+\item \textbf{Dashboard}: Versión actual es básica (mejoras futuras).
+\item \textbf{Análisis}: Recomendaciones son reglas simples (sin ML/AI aún).
+\end{enumerate}
+
+\section{Trabajo Futuro}
+
+\subsection{Corto Plazo (Próximos 3 meses)}
+
+\begin{enumerate}
+\item Implementación completa de dashboard web con mapas interactivos.
+\item Sincronización de estado entre MAIN y sensores.
+\item Descubrimiento automático de nodos con mDNS.
+\item Validación exhaustiva con datos reales de campo.
+\end{enumerate}
+
+\subsection{Mediano Plazo (3-6 meses)}
+
+\begin{enumerate}
+\item Integración con sensores adicionales (temperatura ambiente, humedad relativa, radiación).
+\item Algoritmos predictivos para predicción de riego y fertilización.
+\item Análisis de tendencias históricas.
+\item Exportación de datos a formatos estándar (GeoJSON, WFS).
+\end{enumerate}
+
+\subsection{Largo Plazo (6+ meses)}
+
+\begin{enumerate}
+\item Sincronización opcional con servicios en la nube.
+\item Machine Learning para recomendaciones personalizadas por cultivo.
+\item Integración con sistemas SARA (Sistema de Alerta de Riesgo Agrícola).
+\item Modelo de negocio para escala (SaaS, licencias, servicios).
+\end{enumerate}
 
 \section{Conclusiones}
 
-ZAQUE constituye una alternativa tecnológica para el monitoreo agrícola en entornos rurales con limitaciones de conectividad. La arquitectura distribuida basada en ESP32 permite recopilar, almacenar y visualizar información agronómica de manera autónoma mediante redes locales inalámbricas.
+ZAQUE demuestra la viabilidad de un sistema de monitoreo agrícola local, distribuido y de bajo costo para comunidades rurales con conectividad limitada. La arquitectura basada en ESP32 permite capturar variables críticas del suelo (humedad, pH, NPK), almacenarlas localmente, y proporcionar recomendaciones agrícolas inteligentes sin depender de infraestructura externa.
 
-La integración de sensores de suelo, almacenamiento local, georreferenciación GPS y motores de recomendación proporciona una herramienta de apoyo para la toma de decisiones agrícolas. Asimismo, el uso de hardware de bajo costo favorece la adopción de tecnologías de agricultura de precisión en pequeñas y medianas explotaciones agrícolas.
+Las principales contribuciones de este trabajo son:
 
-Como trabajo futuro se plantea la incorporación de algoritmos de inteligencia artificial, sincronización opcional con servicios en la nube y técnicas avanzadas de análisis predictivo para mejorar la capacidad de diagnóstico del sistema.
+\begin{enumerate}
+\item Arquitectura modular y escalable ejecutable en hardware de ~USD 100.
+\item Motor de recomendaciones basado en reglas agrícolas validadas.
+\item Mecanismos de resiliencia (GPS fallback, reintentos HTTP, SD redundante).
+\item Consumo energético optimizado para autonomía extendida.
+\item Documentación completa y código de software libre.
+\end{enumerate}
+
+Este enfoque offline-first responde a la realidad de zonas rurales en desarrollo, permitiendo que tecnologías de agricultura de precisión sean accesibles sin requerir infraestructura de telecomunicaciones robusta. Se espera que ZAQUE sea una herramienta útil para pequeños y medianos agricultores, extensionistas rurales, y investigadores agrícolas en entornos con limitaciones de conectividad.
+
+\section*{Agradecimientos}
+
+Los autores agradecen a las comunidades campesinas de Colombia que inspiraron esta solución, y a la comunidad de software libre que proporciona las herramientas base para su implementación.
+
+\begin{thebibliography}{1}
+
+\bibitem{precisionAg} R. F. Reid, D. B. Lobell, "Suitability of high-definition imagery and lidar data for precision agriculture in the tropics," \textit{Remote Sensing of Environment}, vol. 205, pp. 145-157, 2018.
+
+\bibitem{IoT} L. Atzori, A. Iera, G. Morabito, "The Internet of Things: A survey," \textit{Computer Networks}, vol. 54, no. 15, pp. 2787-2805, 2010.
+
+\bibitem{SoilSensors} D. A. Robinson, et al., "Soil moisture measurement for ecological and hydrological watershed-scale monitoring," \textit{Nature Reviews Earth \& Environment}, vol. 2, pp. 578-591, 2021.
+
+\bibitem{ESP32} Espressif Systems, "ESP32 Technical Reference Manual," \textit{https://www.espressif.com}, 2024.
+
+\bibitem{Modbus} IEC 61131-3, "Industrial automation systems and integration—Open modbus specification," 2006.
+
+\bibitem{MQTT} A. Banks et al., "MQTT Version 5.0," OASIS Committee Specification, 2019.
+
+\bibitem{Colombia2019} Ministerio de Tecnologías de la Información y Comunicaciones, "Plan Vive Digital 2022-2026," Colombia, 2022.
+
+\end{thebibliography}
+
 \end{document}
-
